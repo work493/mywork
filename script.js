@@ -1,8 +1,8 @@
 // =====================
 // AYARLAR — burası değiştirilecek
 // =====================
-const WHATSAPP_NUMARA = "905XXXXXXXXX"; // Kafenin WhatsApp numarası (başında 90, boşluksuz)
-const KAFE_ADI = "Köşe Kafe";
+const WHATSAPP_NUMARA = "905449205562"; // Kafenin WhatsApp numarası (başında 90, boşluksuz)
+const KAFE_ADI = "Nula Coffee";
 
 // =====================
 // MENÜ VERİSİ
