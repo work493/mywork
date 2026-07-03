@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Köşe Kafe — Sipariş</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #F7F3EC;
+    --dark: #1A1410;
+    --brown: #6B4226;
+    --amber: #C8892A;
+    --muted: #7A6A5A;
+    --border: rgba(106,66,38,0.15);
+    --success: #2D6A4F;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--cream);
+    color: var(--dark);
+    font-size: 15px;
+    line-height: 1.6;
+    padding-bottom: 120px;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--dark);
+    color: var(--cream);
+    padding: 1.1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-left { display: flex; flex-direction: column; }
+  .header-logo {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    color: var(--cream);
+    font-weight: 400;
+  }
+  .header-masa {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-top: 0.1rem;
+  }
+  .cart-btn {
+    background: var(--amber);
+    border: none;
+    border-radius: 2px;
+    padding: 0.6rem 1.1rem;
+    color: var(--dark);
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: var(--sans);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .cart-btn:hover { background: #d4992f; }
+  .cart-count {
+    background: var(--dark);
+    color: var(--cream);
+    border-radius: 50%;
+    width: 20px; height: 20px;
+    font-size: 0.7rem;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+  }
+
+  /* CATEGORIES */
+  .cat-tabs {
+    display: flex;
+    overflow-x: auto;
+    gap: 0;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 0.5rem;
+    scrollbar-width: none;
+    position: sticky; top: 62px; z-index: 40;
+  }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab {
+    flex-shrink: 0;
+    padding: 0.9rem 1.25rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: none;
+    background: none;
+    font-family: var(--sans);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+  }
+  .cat-tab.active { color: var(--brown); border-bottom-color: var(--amber); }
+
+  /* MENU SECTIONS */
+  .menu-section { padding: 1.5rem; }
+  .menu-section-title {
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--brown);
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+    font-style: italic;
+  }
+
+  .menu-items { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 2rem; }
+
+  .menu-item {
+    background: white;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: border-color 0.15s;
+  }
+  .menu-item.in-cart { border-color: var(--amber); }
+
+  .menu-item-info { flex: 1; }
+  .menu-item-name {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--dark);
+    margin-bottom: 0.15rem;
+  }
+  .menu-item-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+  .menu-item-price {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--brown);
+    min-width: 50px;
+    text-align: right;
+  }
+  .item-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .qty-btn {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--cream);
+    color: var(--dark);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .qty-btn.add { background: var(--brown); color: white; border-color: var(--brown); }
+  .qty-btn:hover { opacity: 0.8; }
+  .qty-display {
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-width: 18px;
+    text-align: center;
+    color: var(--dark);
+  }
+
+  /* CART DRAWER */
+  .cart-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(26,20,16,0.5);
+    z-index: 80;
+  }
+  .cart-overlay.open { display: block; }
+
+  .cart-drawer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-radius: 16px 16px 0 0;
+    z-index: 90;
+    max-height: 85vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .cart-drawer.open { transform: translateY(0); }
+
+  .cart-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 1rem auto 0;
+  }
+  .cart-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cart-title {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--dark);
+  }
+  .cart-close {
+    border: none; background: none;
+    font-size: 1.5rem; cursor: pointer;
+    color: var(--muted); line-height: 1;
+    padding: 0.2rem;
+  }
+
+  .cart-items { padding: 1rem 1.5rem; }
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .cart-item:last-child { border-bottom: none; }
+  .cart-item-name { font-size: 0.9rem; font-weight: 500; }
+  .cart-item-qty { font-size: 0.8rem; color: var(--muted); }
+  .cart-item-price { font-size: 0.9rem; font-weight: 600; color: var(--brown); }
+  .cart-item-remove {
+    border: none; background: none;
+    color: var(--muted); font-size: 1rem;
+    cursor: pointer; padding: 0.2rem 0.4rem;
+  }
+
+  .cart-empty {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .cart-empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+
+  .cart-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    border-top: 1px solid var(--border);
+    background: white;
+    position: sticky; bottom: 0;
+  }
+  .cart-total {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+  .cart-total-price { color: var(--brown); font-size: 1.1rem; }
+
+  .note-area {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: var(--sans);
+    font-size: 0.85rem;
+    color: var(--dark);
+    background: var(--cream);
+    resize: none;
+    margin-bottom: 1rem;
+    outline: none;
+  }
+  .note-area:focus { border-color: var(--amber); }
+
+  .whatsapp-btn {
+    width: 100%;
+    padding: 1rem;
+    background: #25D366;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    transition: background 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .whatsapp-btn:hover { background: #1ebe5d; }
+  .whatsapp-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+  /* SUCCESS */
+  .success-screen {
+    display: none;
+    position: fixed; inset: 0;
+    background: var(--cream);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+  .success-screen.show { display: flex; }
+  .success-icon {
+    width: 80px; height: 80px;
+    background: var(--success);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+  }
+  .success-title {
+    font-family: var(--serif);
+    font-size: 2rem;
+    color: var(--dark);
+    margin-bottom: 0.75rem;
+    font-style: italic;
+  }
+  .success-sub { color: var(--muted); font-size: 0.95rem; max-width: 300px; }
+  .success-back {
+    margin-top: 2rem;
+    padding: 0.85rem 2rem;
+    background: var(--brown);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="header-logo">Köşe Kafe</span>
+    <span class="header-masa" id="masa-label">Masa yükleniyor...</span>
+  </div>
+  <button class="cart-btn" onclick="toggleCart()">
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+    Sepet
+    <span class="cart-count" id="cart-count">0</span>
+  </button>
+</header>
+
+<div class="cat-tabs" id="cat-tabs"></div>
+
+<div id="menu-container"></div>
+
+<!-- CART -->
+<div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-handle"></div>
+  <div class="cart-header">
+    <span class="cart-title">Sepetim</span>
+    <button class="cart-close" onclick="toggleCart()">×</button>
+  </div>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-footer" id="cart-footer" style="display:none">
+    <div class="cart-total">
+      <span>Toplam</span>
+      <span class="cart-total-price" id="cart-total">0 ₺</span>
+    </div>
+    <textarea class="note-area" id="order-note" placeholder="Not ekle (şekersiz, az buz, vs.)" rows="2"></textarea>
+    <button class="whatsapp-btn" onclick="sendWhatsApp()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Sipariş Ver
+    </button>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="success-screen" id="success-screen">
+  <div class="success-icon">✓</div>
+  <h2 class="success-title">Siparişin alındı!</h2>
+  <p class="success-sub">WhatsApp üzerinden siparişin iletildi. Kısa sürede hazırlanacak.</p>
+  <button class="success-back" onclick="resetOrder()">Yeni Sipariş Ver</button>
+</div>
+
+<script>
+// =====================
+// AYARLAR — burası değiştirilecek
+// =====================
+const WHATSAPP_NUMARA = "905449205562"; // Kafenin WhatsApp numarası (başında 90)
+const KAFE_ADI = "Nula Coffee";
+
+// =====================
+// MENÜ VERİSİ
+// =====================
+const menu = [
+  {
+    kategori: "☕ Sıcak İçecekler",
+    urunler: [
+      { id: 1, ad: "Espresso", aciklama: "Yoğun, saf, iki shot", fiyat: 45 },
+      { id: 2, ad: "Cappuccino", aciklama: "Espresso + süt köpüğü", fiyat: 65 },
+      { id: 3, ad: "Flat White", aciklama: "Çift shot, ince süt", fiyat: 70 },
+      { id: 4, ad: "Latte", aciklama: "Espresso + buharlı süt", fiyat: 70 },
+      { id: 5, ad: "Türk Kahvesi", aciklama: "Geleneksel pişirim", fiyat: 55 },
+      { id: 6, ad: "Sıcak Çikolata", aciklama: "Gerçek kakao, koyu", fiyat: 75 },
+    ]
+  },
+  {
+    kategori: "🧊 Soğuk İçecekler",
+    urunler: [
+      { id: 7, ad: "Cold Brew", aciklama: "12 saat demleme", fiyat: 80 },
+      { id: 8, ad: "Iced Latte", aciklama: "Espresso, süt, buz", fiyat: 75 },
+      { id: 9, ad: "Frappe", aciklama: "Blended, çikolatalı +10₺", fiyat: 85 },
+      { id: 10, ad: "Limonata", aciklama: "Taze sıkılmış, fesleğenli", fiyat: 65 },
+    ]
+  },
+  {
+    kategori: "🥪 Yiyecekler",
+    urunler: [
+      { id: 11, ad: "Tost", aciklama: "Köy ekmeği, kaşar, domates", fiyat: 90 },
+      { id: 12, ad: "Avokadolu Sandviç", aciklama: "Ekşi maya ekmek", fiyat: 130 },
+      { id: 13, ad: "Günlük Kek", aciklama: "Her gün değişir", fiyat: 60 },
+      { id: 14, ad: "Waffle", aciklama: "Muz & Nutella veya tuzlu karamel", fiyat: 120 },
+    ]
+  }
+];
+
+// =====================
+// DURUM
+// =====================
+let sepet = {};
+let masaNo = 1;
+
+// URL'den masa no oku
+function getMasaNo() {
+  const params = new URLSearchParams(window.location.search);
+  const m = parseInt(params.get("masa"));
+  if (m && m >= 1 && m <= 10) return m;
+  return 1;
+}
+
+// =====================
+// RENDER
+// =====================
+function renderMenu() {
+  const container = document.getElementById("menu-container");
+  const tabs = document.getElementById("cat-tabs");
+  container.innerHTML = "";
+  tabs.innerHTML = "";
+
+  menu.forEach((kat, ki) => {
+    // Tab
+    const tab = document.createElement("button");
+    tab.className = "cat-tab" + (ki === 0 ? " active" : "");
+    tab.textContent = kat.kategori;
+    tab.onclick = () => {
+      document.querySelectorAll(".cat-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("sec-" + ki).scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    tabs.appendChild(tab);
+
+    // Section
+    const sec = document.createElement("div");
+    sec.className = "menu-section";
+    sec.id = "sec-" + ki;
+
+    const title = document.createElement("div");
+    title.className = "menu-section-title";
+    title.textContent = kat.kategori;
+    sec.appendChild(title);
+
+    const items = document.createElement("div");
+    items.className = "menu-items";
+
+    kat.urunler.forEach(urun => {
+      const qty = sepet[urun.id] || 0;
+      const el = document.createElement("div");
+      el.className = "menu-item" + (qty > 0 ? " in-cart" : "");
+      el.id = "item-" + urun.id;
+      el.innerHTML = `
+        <div class="menu-item-info">
+          <div class="menu-item-name">${urun.ad}</div>
+          <div class="menu-item-desc">${urun.aciklama}</div>
+        </div>
+        <div class="menu-item-price">${urun.fiyat} ₺</div>
+        <div class="item-controls">
+          ${qty > 0 ? `<button class="qty-btn" onclick="change(${urun.id},-1)">−</button>
+          <span class="qty-display" id="qty-${urun.id}">${qty}</span>` : ''}
+          <button class="qty-btn add" onclick="change(${urun.id},1)">+</button>
+        </div>
+      `;
+      items.appendChild(el);
+    });
+
+    sec.appendChild(items);
+    container.appendChild(sec);
+  });
+}
+
+function change(id, delta) {
+  sepet[id] = Math.max(0, (sepet[id] || 0) + delta);
+  if (sepet[id] === 0) delete sepet[id];
+  updateItem(id);
+  updateCartCount();
+}
+
+function updateItem(id) {
+  const el = document.getElementById("item-" + id);
+  if (!el) return;
+  const qty = sepet[id] || 0;
+  const urun = findUrun(id);
+  el.className = "menu-item" + (qty > 0 ? " in-cart" : "");
+  el.querySelector(".item-controls").innerHTML = `
+    ${qty > 0 ? `<button class="qty-btn" onclick="change(${id},-1)">−</button>
+    <span class="qty-display" id="qty-${id}">${qty}</span>` : ''}
+    <button class="qty-btn add" onclick="change(${id},1)">+</button>
+  `;
+}
+
+function findUrun(id) {
+  for (const kat of menu) {
+    const u = kat.urunler.find(u => u.id === id);
+    if (u) return u;
+  }
+  return null;
+}
+
+function updateCartCount() {
+  const total = Object.values(sepet).reduce((a, b) => a + b, 0);
+  document.getElementById("cart-count").textContent = total;
+}
+
+// =====================
+// SEPET
+// =====================
+function toggleCart() {
+  const overlay = document.getElementById("cart-overlay");
+  const drawer = document.getElementById("cart-drawer");
+  const open = drawer.classList.contains("open");
+  if (open) {
+    drawer.classList.remove("open");
+    overlay.classList.remove("open");
+  } else {
+    renderCart();
+    drawer.classList.add("open");
+    overlay.classList.add("open");
+  }
+}
+
+function renderCart() {
+  const container = document.getElementById("cart-items");
+  const footer = document.getElementById("cart-footer");
+  const ids = Object.keys(sepet);
+
+  if (ids.length === 0) {
+    container.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">☕</div>Sepetiniz boş.<br>Menüden ürün ekleyin.</div>`;
+    footer.style.display = "none";
+    return;
+  }
+
+  let total = 0;
+  container.innerHTML = "";
+  ids.forEach(id => {
+    const urun = findUrun(parseInt(id));
+    if (!urun) return;
+    const qty = sepet[id];
+    const subtotal = urun.fiyat * qty;
+    total += subtotal;
+    const el = document.createElement("div");
+    el.className = "cart-item";
+    el.innerHTML = `
+      <div style="flex:1">
+        <div class="cart-item-name">${urun.ad}</div>
+        <div class="cart-item-qty">${qty} adet × ${urun.fiyat} ₺</div>
+      </div>
+      <span class="cart-item-price">${subtotal} ₺</span>
+      <button class="cart-item-remove" onclick="removeFromCart(${urun.id})">×</button>
+    `;
+    container.appendChild(el);
+  });
+
+  document.getElementById("cart-total").textContent = total + " ₺";
+  footer.style.display = "block";
+}
+
+function removeFromCart(id) {
+  delete sepet[id];
+  updateItem(id);
+  updateCartCount();
+  renderCart();
+}
+
+// =====================
+// WHATSAPP
+// =====================
+function sendWhatsApp() {
+  const ids = Object.keys(sepet);
+  if (ids.length === 0) return;
+
+  const not = document.getElementById("order-note").value.trim();
+  let mesaj = `🏪 *${KAFE_ADI}* — Yeni Sipariş\n`;
+  mesaj += `📍 *Masa ${masaNo}*\n`;
+  mesaj += `────────────────\n`;
+
+  let toplam = 0;
+  ids.forEach(id => {
+    const urun = findUrun(parseInt(id));
+    if (!urun) return;
+    const qty = sepet[id];
+    const sub = urun.fiyat * qty;
+    toplam += sub;
+    mesaj += `• ${urun.ad} × ${qty} — ${sub} ₺\n`;
+  });
+
+  mesaj += `────────────────\n`;
+  mesaj += `💰 *Toplam: ${toplam} ₺*\n`;
+  if (not) mesaj += `📝 Not: ${not}`;
+
+  const encoded = encodeURIComponent(mesaj);
+  const url = `https://wa.me/${WHATSAPP_NUMARA}?text=${encoded}`;
+  window.open(url, "_blank");
+
+  // Başarı ekranı
+  setTimeout(() => {
+    document.getElementById("cart-drawer").classList.remove("open");
+    document.getElementById("cart-overlay").classList.remove("open");
+    document.getElementById("success-screen").classList.add("show");
+  }, 500);
+}
+
+function resetOrder() {
+  sepet = {};
+  document.getElementById("order-note").value = "";
+  document.getElementById("success-screen").classList.remove("show");
+  document.getElementById("cart-count").textContent = "0";
+  renderMenu();
+}
+
+// =====================
+// BAŞLAT
+// =====================
+masaNo = getMasaNo();
+document.getElementById("masa-label").textContent = `Masa ${masaNo}`;
+document.title = `${KAFE_ADI} — Masa ${masaNo}`;
+renderMenu();
+</script>
+</body>
+</html>
