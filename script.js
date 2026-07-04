@@ -1,8 +1,25 @@
 // =====================
 // AYARLAR — burası değiştirilecek
 // =====================
-const WHATSAPP_NUMARA = "905449205562"; // Kafenin WhatsApp numarası (başında 90, boşluksuz)
-const KAFE_ADI = "Nula Coffee";
+const WHATSAPP_NUMARA = "905XXXXXXXXX"; // Kafenin WhatsApp numarası (başında 90, boşluksuz)
+const KAFE_ADI = "Köşe Kafe";
+
+// Firebase ayarları
+const firebaseConfig = {
+  apiKey: "AIzaSyALDEl3MN5frBidfX7AZ4op0qGFGlPRZ88",
+  authDomain: "nula-coffee.firebaseapp.com",
+  databaseURL: "https://nula-coffee-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "nula-coffee",
+  storageBucket: "nula-coffee.firebasestorage.app",
+  messagingSenderId: "601885483227",
+  appId: "1:601885483227:web:dde659834f539be9e02cfe"
+};
+
+// Firebase başlat
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 // =====================
 // MENÜ VERİSİ
@@ -206,9 +223,9 @@ function removeFromCart(id) {
 }
 
 // =====================
-// WHATSAPP
+// WHATSAPP + FİREBASE
 // =====================
-function sendWhatsApp() {
+async function sendWhatsApp() {
   const ids = Object.keys(sepet);
   if (ids.length === 0) return;
 
@@ -218,6 +235,8 @@ function sendWhatsApp() {
   mesaj += `────────────────\n`;
 
   let toplam = 0;
+  const urunlerListesi = [];
+
   ids.forEach(id => {
     const urun = findUrun(parseInt(id));
     if (!urun) return;
@@ -225,12 +244,30 @@ function sendWhatsApp() {
     const sub = urun.fiyat * qty;
     toplam += sub;
     mesaj += `• ${urun.ad} × ${qty} — ${sub} ₺\n`;
+    urunlerListesi.push({ ad: urun.ad, adet: qty, fiyat: urun.fiyat });
   });
 
   mesaj += `────────────────\n`;
   mesaj += `💰 *Toplam: ${toplam} ₺*\n`;
   if (not) mesaj += `📝 Not: ${not}`;
 
+  // Firebase'e kaydet
+  try {
+    const yeniSiparis = {
+      masa: masaNo,
+      urunler: urunlerListesi,
+      toplam: toplam,
+      not: not || "",
+      durum: "bekliyor",
+      zaman: Date.now()
+    };
+    const sipRef = ref(db, "siparisler");
+    await push(sipRef, yeniSiparis);
+  } catch(e) {
+    console.error("Firebase hatası:", e);
+  }
+
+  // WhatsApp'a da gönder
   const encoded = encodeURIComponent(mesaj);
   window.open(`https://wa.me/${WHATSAPP_NUMARA}?text=${encoded}`, "_blank");
 
