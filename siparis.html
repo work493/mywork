@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Köşe Kafe — Sipariş</title>
+<title>Nula Coffee — Sipariş</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -77,7 +77,7 @@ header { background: var(--dark); color: var(--cream); padding: 1.1rem 1.5rem; d
 
 <header>
   <div class="header-left">
-    <span class="header-logo">Köşe Kafe</span>
+    <span class="header-logo">Nula Coffee</span>
     <span class="header-masa" id="masa-label">Yükleniyor...</span>
   </div>
   <button class="cart-btn" onclick="toggleCart()">
@@ -126,7 +126,7 @@ import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12
 // =====================
 // AYARLAR
 // =====================
-const KAFE_ADI = "Köşe Kafe";
+const KAFE_ADI = "Nula Coffee";
 
 const firebaseConfig = {
   apiKey: "AIzaSyALDEl3MN5frBidfX7AZ4op0qGFGlPRZ88",
@@ -153,13 +153,13 @@ const menu = [
     { id: 5, ad: "Türk Kahvesi", aciklama: "Geleneksel pişirim", fiyat: 55 },
     { id: 6, ad: "Sıcak Çikolata", aciklama: "Gerçek kakao, koyu", fiyat: 75 },
   ]},
-  { kategori: "🧊 Soğuk İçecekler", urunler: [
+  { kategori: "🥤 Soğuk İçecekler", urunler: [
     { id: 7, ad: "Cold Brew", aciklama: "12 saat demleme", fiyat: 80 },
     { id: 8, ad: "Iced Latte", aciklama: "Espresso, süt, buz", fiyat: 75 },
     { id: 9, ad: "Frappe", aciklama: "Blended, çikolatalı +10₺", fiyat: 85 },
     { id: 10, ad: "Limonata", aciklama: "Taze sıkılmış, fesleğenli", fiyat: 65 },
   ]},
-  { kategori: "🥪 Yiyecekler", urunler: [
+  { kategori: "🍽️ Yiyecekler", urunler: [
     { id: 11, ad: "Tost", aciklama: "Köy ekmeği, kaşar, domates", fiyat: 90 },
     { id: 12, ad: "Avokadolu Sandviç", aciklama: "Ekşi maya ekmek", fiyat: 130 },
     { id: 13, ad: "Günlük Kek", aciklama: "Her gün değişir", fiyat: 60 },
