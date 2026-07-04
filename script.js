@@ -1,10 +1,13 @@
+// Firebase import'ları — EN ÜSTTE OLMALI
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
 // =====================
-// AYARLAR — burası değiştirilecek
+// AYARLAR
 // =====================
-const WHATSAPP_NUMARA = "905XXXXXXXXX"; // Kafenin WhatsApp numarası (başında 90, boşluksuz)
+const WHATSAPP_NUMARA = "905XXXXXXXXX"; // Kafenin WhatsApp numarası
 const KAFE_ADI = "Köşe Kafe";
 
-// Firebase ayarları
 const firebaseConfig = {
   apiKey: "AIzaSyALDEl3MN5frBidfX7AZ4op0qGFGlPRZ88",
   authDomain: "nula-coffee.firebaseapp.com",
@@ -15,9 +18,6 @@ const firebaseConfig = {
   appId: "1:601885483227:web:dde659834f539be9e02cfe"
 };
 
-// Firebase başlat
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
@@ -48,9 +48,9 @@ const menu = [
   {
     kategori: "🥪 Yiyecekler",
     urunler: [
-      { id: 11, ad: "Tost",              aciklama: "Köy ekmeği, kaşar, domates",    fiyat: 90  },
-      { id: 12, ad: "Avokadolu Sandviç", aciklama: "Ekşi maya ekmek",              fiyat: 130 },
-      { id: 13, ad: "Günlük Kek",        aciklama: "Her gün değişir",              fiyat: 60  },
+      { id: 11, ad: "Tost",              aciklama: "Köy ekmeği, kaşar, domates",        fiyat: 90  },
+      { id: 12, ad: "Avokadolu Sandviç", aciklama: "Ekşi maya ekmek",                  fiyat: 130 },
+      { id: 13, ad: "Günlük Kek",        aciklama: "Her gün değişir",                  fiyat: 60  },
       { id: 14, ad: "Waffle",            aciklama: "Muz & Nutella veya tuzlu karamel", fiyat: 120 },
     ]
   }
@@ -79,7 +79,6 @@ function renderMenu() {
   tabs.innerHTML = "";
 
   menu.forEach((kat, ki) => {
-    // Tab
     const tab = document.createElement("button");
     tab.className = "cat-tab" + (ki === 0 ? " active" : "");
     tab.textContent = kat.kategori;
@@ -90,7 +89,6 @@ function renderMenu() {
     };
     tabs.appendChild(tab);
 
-    // Bölüm
     const sec = document.createElement("div");
     sec.className = "menu-section";
     sec.id = "sec-" + ki;
@@ -116,7 +114,7 @@ function renderMenu() {
         <div class="menu-item-price">${urun.fiyat} ₺</div>
         <div class="item-controls">
           ${qty > 0 ? `<button class="qty-btn" onclick="change(${urun.id}, -1)">−</button>
-          <span class="qty-display" id="qty-${urun.id}">${qty}</span>` : ""}
+          <span class="qty-display">${qty}</span>` : ""}
           <button class="qty-btn add" onclick="change(${urun.id}, 1)">+</button>
         </div>
       `;
@@ -197,7 +195,6 @@ function renderCart() {
     const qty = sepet[id];
     const subtotal = urun.fiyat * qty;
     total += subtotal;
-
     const el = document.createElement("div");
     el.className = "cart-item";
     el.innerHTML = `
@@ -251,7 +248,6 @@ async function sendWhatsApp() {
   mesaj += `💰 *Toplam: ${toplam} ₺*\n`;
   if (not) mesaj += `📝 Not: ${not}`;
 
-  // Firebase'e kaydet
   try {
     const yeniSiparis = {
       masa: masaNo,
@@ -261,13 +257,11 @@ async function sendWhatsApp() {
       durum: "bekliyor",
       zaman: Date.now()
     };
-    const sipRef = ref(db, "siparisler");
-    await push(sipRef, yeniSiparis);
+    await push(ref(db, "siparisler"), yeniSiparis);
   } catch(e) {
     console.error("Firebase hatası:", e);
   }
 
-  // WhatsApp'a da gönder
   const encoded = encodeURIComponent(mesaj);
   window.open(`https://wa.me/${WHATSAPP_NUMARA}?text=${encoded}`, "_blank");
 
@@ -285,6 +279,13 @@ function resetOrder() {
   updateCartCount();
   renderMenu();
 }
+
+// window üzerine bağla (HTML onclick için gerekli)
+window.toggleCart = toggleCart;
+window.change = change;
+window.removeFromCart = removeFromCart;
+window.sendWhatsApp = sendWhatsApp;
+window.resetOrder = resetOrder;
 
 // =====================
 // BAŞLAT
