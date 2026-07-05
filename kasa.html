@@ -156,6 +156,7 @@ function renderBoard() {
     kart.innerHTML = `
       <div class="kart-header">
         <div class="masa-badge">Masa ${s.masa}</div>
+        ${s.musteriAdi ? `<div class="musteri-adi">👤 ${s.musteriAdi}</div>` : ""}
         <div class="kart-zaman">
           <span class="zaman-saat">${zamanStr}</span>
           <span class="zaman-gecen">${gecenStr}</span>

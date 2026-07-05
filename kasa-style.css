@@ -168,7 +168,14 @@ header {
   border-radius: 2px;
   letter-spacing: 0.05em;
 }
-.siparis-kart.tamamlandi .masa-badge { background: #555; color: #aaa; }
+.musteri-adi {
+  font-size: 0.82rem;
+  color: var(--amber);
+  font-weight: 600;
+  background: rgba(200,137,42,0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
+}
 
 .kart-zaman {
   display: flex;

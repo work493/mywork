@@ -65,6 +65,9 @@ header { background: var(--dark); color: var(--cream); padding: 1.1rem 1.5rem; d
 .siparis-btn { width: 100%; padding: 1rem; background: var(--brown); color: white; border: none; border-radius: 4px; font-family: var(--sans); font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem; transition: background 0.2s; }
 .siparis-btn:hover { background: var(--dark); }
 .siparis-btn:disabled { background: #ccc; cursor: not-allowed; }
+.name-input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--amber); border-radius: 4px; font-family: var(--sans); font-size: 0.95rem; color: var(--dark); background: white; margin-bottom: 0.75rem; outline: none; font-weight: 500; }
+.name-input:focus { border-color: var(--brown); }
+.name-label { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brown); margin-bottom: 0.4rem; display: block; }
 .success-screen { display: none; position: fixed; inset: 0; background: var(--cream); z-index: 100; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; }
 .success-screen.show { display: flex; }
 .success-icon { width: 80px; height: 80px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; font-size: 2rem; color: white; }
@@ -106,6 +109,8 @@ header { background: var(--dark); color: var(--cream); padding: 1.1rem 1.5rem; d
       <span class="cart-total-price" id="cart-total">0 ₺</span>
     </div>
     <textarea class="note-area" id="order-note" placeholder="Not ekle (şekersiz, az buz, vs.)" rows="2"></textarea>
+    <label class="name-label" for="customer-name">Adınız *</label>
+    <input class="name-input" id="customer-name" type="text" placeholder="Adınızı girin" autocomplete="off">
     <button class="siparis-btn" onclick="siparisGonder()">
       ✓ Sipariş Ver
     </button>
@@ -114,8 +119,8 @@ header { background: var(--dark); color: var(--cream); padding: 1.1rem 1.5rem; d
 
 <div class="success-screen" id="success-screen">
   <div class="success-icon">✓</div>
-  <h2 class="success-title">Siparişin alındı!</h2>
-  <p class="success-sub">Siparişin mutfağa iletildi. Kısa sürede hazırlanacak.</p>
+  <h2 class="success-title">Siparişiniz alındı!</h2>
+  <p class="success-sub" id="success-msg">Siparişiniz hazır olunca <strong id="success-name"></strong> adıyla sesleneceğiz. Lütfen bekleyiniz. ☕</p>
   <button class="success-back" onclick="resetOrder()">Yeni Sipariş Ver</button>
 </div>
 
@@ -153,13 +158,13 @@ const menu = [
     { id: 5, ad: "Türk Kahvesi", aciklama: "Geleneksel pişirim", fiyat: 55 },
     { id: 6, ad: "Sıcak Çikolata", aciklama: "Gerçek kakao, koyu", fiyat: 75 },
   ]},
-  { kategori: "🥤 Soğuk İçecekler", urunler: [
+  { kategori: "❄ Soğuk İçecekler", urunler: [
     { id: 7, ad: "Cold Brew", aciklama: "12 saat demleme", fiyat: 80 },
     { id: 8, ad: "Iced Latte", aciklama: "Espresso, süt, buz", fiyat: 75 },
     { id: 9, ad: "Frappe", aciklama: "Blended, çikolatalı +10₺", fiyat: 85 },
     { id: 10, ad: "Limonata", aciklama: "Taze sıkılmış, fesleğenli", fiyat: 65 },
   ]},
-  { kategori: "🍽️ Yiyecekler", urunler: [
+  { kategori: "★ Yiyecekler", urunler: [
     { id: 11, ad: "Tost", aciklama: "Köy ekmeği, kaşar, domates", fiyat: 90 },
     { id: 12, ad: "Avokadolu Sandviç", aciklama: "Ekşi maya ekmek", fiyat: 130 },
     { id: 13, ad: "Günlük Kek", aciklama: "Her gün değişir", fiyat: 60 },
@@ -274,6 +279,13 @@ window.removeFromCart = (id) => {
 
 window.siparisGonder = async () => {
   const ids = Object.keys(sepet); if(ids.length===0) return;
+  const musteriAdi = document.getElementById("customer-name").value.trim();
+  if(!musteriAdi) {
+    document.getElementById("customer-name").focus();
+    document.getElementById("customer-name").style.borderColor = "#c1121f";
+    document.getElementById("customer-name").placeholder = "Lütfen adınızı girin!";
+    return;
+  }
   const btn = document.querySelector(".siparis-btn");
   btn.disabled = true; btn.textContent = "Gönderiliyor...";
   const not = document.getElementById("order-note").value.trim();
@@ -286,12 +298,14 @@ window.siparisGonder = async () => {
   try {
     await push(ref(db,"siparisler"),{
       masa: masaNo,
+      musteriAdi: musteriAdi,
       urunler: urunlerListesi,
       toplam: toplam,
       not: not||"",
       durum: "bekliyor",
       zaman: Date.now()
     });
+    document.getElementById("success-name").textContent = musteriAdi;
     document.getElementById("cart-drawer").classList.remove("open");
     document.getElementById("cart-overlay").classList.remove("open");
     document.getElementById("success-screen").classList.add("show");
@@ -304,6 +318,8 @@ window.siparisGonder = async () => {
 window.resetOrder = () => {
   sepet={};
   document.getElementById("order-note").value="";
+  document.getElementById("customer-name").value="";
+  document.getElementById("customer-name").style.borderColor="";
   document.getElementById("success-screen").classList.remove("show");
   updateCartCount(); renderMenu();
 };
