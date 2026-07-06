@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LatteLab — Sipariş</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cream: #F5F0F0; --dark: #1A0A0A; --brown: #8B1A1A;
+  --amber: #C0392B; --muted: #7A5A5A; --border: rgba(139,26,26,0.15);
+  --success: #2D6A4F;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Inter', system-ui, sans-serif;
+}
+html, body { height: 100%; }
+body { font-family: var(--sans); background: var(--cream); color: var(--dark); font-size: 15px; line-height: 1.6; padding-bottom: 120px; }
+header { background: var(--dark); color: white; padding: 1.1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+.header-left { display: flex; flex-direction: column; }
+.header-logo { font-family: var(--serif); font-size: 1.3rem; color: white; font-weight: 400; letter-spacing: 0.04em; }
+.header-masa { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber); margin-top: 0.1rem; }
+.cart-btn { background: var(--amber); border: none; border-radius: 2px; padding: 0.6rem 1.1rem; color: white; font-size: 0.8rem; font-weight: 600; font-family: var(--sans); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s; }
+.cart-btn:hover { background: #a93226; }
+.cart-count { background: white; color: var(--amber); border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.cat-tabs { display: flex; overflow-x: auto; background: white; border-bottom: 1px solid var(--border); padding: 0 0.5rem; scrollbar-width: none; position: sticky; top: 62px; z-index: 40; }
+.cat-tabs::-webkit-scrollbar { display: none; }
+.cat-tab { flex-shrink: 0; padding: 0.9rem 1.1rem; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: none; background: none; font-family: var(--sans); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; white-space: nowrap; }
+.cat-tab.active { color: var(--brown); border-bottom-color: var(--amber); }
+.menu-section { padding: 1.25rem; }
+.menu-section-title { font-family: var(--serif); font-size: 1.2rem; font-weight: 400; color: var(--brown); margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); font-style: italic; }
+.menu-items { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+.menu-item { background: white; border-radius: 4px; border: 1px solid var(--border); padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.75rem; transition: border-color 0.15s; }
+.menu-item.in-cart { border-color: var(--amber); }
+.menu-item-info { flex: 1; min-width: 0; }
+.menu-item-name { font-weight: 500; font-size: 0.9rem; color: var(--dark); }
+.single-ctrl { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+.menu-item-price { font-size: 0.85rem; font-weight: 600; color: var(--brown); white-space: nowrap; }
+.item-controls { display: flex; align-items: center; gap: 0.3rem; }
+.qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--cream); color: var(--dark); font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; line-height: 1; flex-shrink: 0; }
+.qty-btn.add { background: var(--brown); color: white; border-color: var(--brown); }
+.qty-display { font-size: 0.85rem; font-weight: 600; min-width: 16px; text-align: center; color: var(--dark); }
+.size-group { display: flex; flex-direction: column; gap: 0.25rem; flex-shrink: 0; }
+.size-row { display: flex; align-items: center; gap: 0.35rem; justify-content: flex-end; }
+.size-lbl { font-size: 0.68rem; color: var(--muted); min-width: 38px; text-align: right; }
+.size-pr { font-size: 0.78rem; font-weight: 600; color: var(--brown); min-width: 46px; text-align: right; white-space: nowrap; }
+.size-ctrl { display: flex; align-items: center; gap: 0.25rem; }
+.qty-btn.sm { width: 24px; height: 24px; font-size: 0.85rem; }
+.qty-sm { font-size: 0.82rem; font-weight: 600; min-width: 14px; text-align: center; color: var(--dark); }
+.cart-overlay { display: none; position: fixed; inset: 0; background: rgba(26,10,10,0.5); z-index: 80; }
+.cart-overlay.open { display: block; }
+.cart-drawer { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 16px 16px 0 0; z-index: 90; max-height: 85vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s ease; }
+.cart-drawer.open { transform: translateY(0); }
+.cart-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 1rem auto 0; }
+.cart-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.cart-title { font-family: var(--serif); font-size: 1.2rem; font-weight: 400; color: var(--dark); }
+.cart-close { border: none; background: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); line-height: 1; padding: 0.2rem; }
+.cart-items { padding: 1rem 1.5rem; }
+.cart-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border); gap: 1rem; }
+.cart-item:last-child { border-bottom: none; }
+.cart-item-name { font-size: 0.9rem; font-weight: 500; }
+.cart-item-qty { font-size: 0.8rem; color: var(--muted); }
+.cart-item-price { font-size: 0.9rem; font-weight: 600; color: var(--brown); }
+.cart-item-remove { border: none; background: none; color: var(--muted); font-size: 1rem; cursor: pointer; padding: 0.2rem 0.4rem; }
+.cart-empty { text-align: center; padding: 3rem 1.5rem; color: var(--muted); font-size: 0.9rem; }
+.cart-empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+.cart-footer { padding: 1rem 1.5rem 1.5rem; border-top: 1px solid var(--border); background: white; position: sticky; bottom: 0; }
+.cart-total { display: flex; justify-content: space-between; margin-bottom: 1rem; font-weight: 600; font-size: 1rem; }
+.cart-total-price { color: var(--brown); font-size: 1.1rem; }
+.note-area { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 4px; font-family: var(--sans); font-size: 0.85rem; color: var(--dark); background: var(--cream); resize: none; margin-bottom: 1rem; outline: none; }
+.note-area:focus { border-color: var(--amber); }
+.siparis-btn { width: 100%; padding: 1rem; background: var(--brown); color: white; border: none; border-radius: 4px; font-family: var(--sans); font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem; transition: background 0.2s; }
+.siparis-btn:hover { background: var(--dark); }
+.siparis-btn:disabled { background: #ccc; cursor: not-allowed; }
+.success-screen { display: none; position: fixed; inset: 0; background: var(--cream); z-index: 100; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; }
+.success-screen.show { display: flex; }
+.success-icon { width: 80px; height: 80px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; font-size: 2rem; color: white; }
+.success-title { font-family: var(--serif); font-size: 2rem; color: var(--dark); margin-bottom: 0.75rem; font-style: italic; }
+.success-sub { color: var(--muted); font-size: 0.95rem; max-width: 300px; }
+.success-back { margin-top: 2rem; padding: 0.85rem 2rem; background: var(--brown); color: white; border: none; border-radius: 4px; font-family: var(--sans); font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="header-logo">LatteLab</span>
+    <span class="header-masa" id="masa-label">Yükleniyor...</span>
+  </div>
+  <button class="cart-btn" onclick="toggleCart()">
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+    </svg>
+    Sepet
+    <span class="cart-count" id="cart-count">0</span>
+  </button>
+</header>
+
+<div class="cat-tabs" id="cat-tabs"></div>
+<div id="menu-container"></div>
+
+<div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-handle"></div>
+  <div class="cart-header">
+    <span class="cart-title">Sepetim</span>
+    <button class="cart-close" onclick="toggleCart()">×</button>
+  </div>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-footer" id="cart-footer" style="display:none">
+    <div class="cart-total">
+      <span>Toplam</span>
+      <span class="cart-total-price" id="cart-total">0 ₺</span>
+    </div>
+    <textarea class="note-area" id="order-note" placeholder="Not ekle (şekersiz, az buz, vs.)" rows="2"></textarea>
+    <button class="siparis-btn" onclick="siparisGonder()">✓ Sipariş Ver</button>
+  </div>
+</div>
+
+<div class="success-screen" id="success-screen">
+  <div class="success-icon">✓</div>
+  <h2 class="success-title">Siparişiniz alındı!</h2>
+  <p class="success-sub">Siparişiniz hazırlanıyor, kısa sürede servis edilecek. ☕</p>
+  <button class="success-back" onclick="resetOrder()">Yeni Sipariş Ver</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const KAFE_ADI = "LatteLab";
+const FIREBASE_PATH = "lattelab_siparisler";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyALDEl3MN5frBidfX7AZ4op0qGFGlPRZ88",
+  authDomain: "nula-coffee.firebaseapp.com",
+  databaseURL: "https://nula-coffee-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "nula-coffee",
+  storageBucket: "nula-coffee.firebasestorage.app",
+  messagingSenderId: "601885483227",
+  appId: "1:601885483227:web:dde659834f539be9e02cfe"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const menu = [
+  { kategori: "☕ Sıcak Kahveler", urunler: [
+    { id:1,  ad:"Espresso",              boyutlar:[{ad:"Büyük",fiyat:130},{ad:"Orta",fiyat:120}] },
+    { id:2,  ad:"Americano",             boyutlar:[{ad:"Büyük",fiyat:160},{ad:"Orta",fiyat:140}] },
+    { id:3,  ad:"Filtre Kahve",          boyutlar:[{ad:"Büyük",fiyat:160},{ad:"Orta",fiyat:140}] },
+    { id:4,  ad:"Sütlü Filtre Kahve",    boyutlar:[{ad:"Büyük",fiyat:170},{ad:"Orta",fiyat:150}] },
+    { id:5,  ad:"Cappuccino",            boyutlar:[{ad:"Büyük",fiyat:170},{ad:"Orta",fiyat:150}] },
+    { id:6,  ad:"Caffe Latte",           boyutlar:[{ad:"Büyük",fiyat:170},{ad:"Orta",fiyat:150}] },
+    { id:7,  ad:"Black Eye",             boyutlar:[{ad:"Büyük",fiyat:180},{ad:"Orta",fiyat:160}] },
+    { id:8,  ad:"Flat White",            boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Orta",fiyat:170}] },
+    { id:9,  ad:"Caramel Macchiato",     boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Orta",fiyat:170}] },
+    { id:10, ad:"Vanilya Macchiato",     boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Orta",fiyat:170}] },
+    { id:11, ad:"Pumpkin Spice",         boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Orta",fiyat:170}] },
+    { id:12, ad:"Mocha",                 boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Orta",fiyat:170}] },
+    { id:13, ad:"White Chocolate Mocha", boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Orta",fiyat:170}] },
+    { id:14, ad:"Lotus Latte",           boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Orta",fiyat:170}] },
+    { id:15, ad:"Karamel Latte",         boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Orta",fiyat:170}] },
+    { id:16, ad:"Vanilya Latte",         boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Orta",fiyat:170}] },
+    { id:17, ad:"Fistikli Latte",        boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Orta",fiyat:180}] },
+    { id:18, ad:"Affogato",              fiyat:220 },
+  ]},
+  { kategori: "❄ Soğuk Kahveler", urunler: [
+    { id:19, ad:"Ice Americano",             boyutlar:[{ad:"Büyük",fiyat:170},{ad:"Orta",fiyat:150}] },
+    { id:20, ad:"Ice Filtre Kahve",          boyutlar:[{ad:"Büyük",fiyat:170},{ad:"Orta",fiyat:150}] },
+    { id:21, ad:"Ice Sütlü Filtre Kahve",    boyutlar:[{ad:"Büyük",fiyat:180},{ad:"Orta",fiyat:160}] },
+    { id:22, ad:"Ice Latte",                 boyutlar:[{ad:"Büyük",fiyat:180},{ad:"Orta",fiyat:170}] },
+    { id:23, ad:"Ice Caramel Macchiato",     boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Orta",fiyat:180}] },
+    { id:24, ad:"Ice Pumpkin Spice",         boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Orta",fiyat:180}] },
+    { id:25, ad:"Ice Mocha",                 boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Orta",fiyat:180}] },
+    { id:26, ad:"Ice White Chocolate Mocha", boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Orta",fiyat:180}] },
+    { id:27, ad:"Ice Lotus Latte",           boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Orta",fiyat:180}] },
+    { id:28, ad:"Ice Karamel Latte",         boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Orta",fiyat:180}] },
+    { id:29, ad:"Ice Vanilya Latte",         boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Orta",fiyat:180}] },
+    { id:30, ad:"Ice Fistikli Latte",        boyutlar:[{ad:"Büyük",fiyat:210},{ad:"Orta",fiyat:190}] },
+  ]},
+  { kategori: "☕ Türk & Yöresel", urunler: [
+    { id:31, ad:"Türk Kahvesi",               fiyat:120 },
+    { id:32, ad:"Menengic Kahvesi",           fiyat:120 },
+    { id:33, ad:"Dibek Kahvesi",              fiyat:120 },
+    { id:34, ad:"Damla Sakizli Türk Kahvesi", fiyat:120 },
+  ]},
+  { kategori: "★ Çay & Sıcak", urunler: [
+    { id:35, ad:"Fincan Çay",      fiyat:60  },
+    { id:36, ad:"Sicak Çikolata",  fiyat:130 },
+    { id:37, ad:"Salep",           fiyat:130 },
+    { id:38, ad:"Chai Tea Latte",  fiyat:120 },
+    { id:39, ad:"Kis Çayi",        fiyat:140 },
+    { id:40, ad:"Ihlamur",         fiyat:140 },
+    { id:41, ad:"Nane Limon Çayi", fiyat:140 },
+    { id:42, ad:"Yesil Çay",       fiyat:140 },
+    { id:43, ad:"Ada Çayi",        fiyat:140 },
+  ]},
+  { kategori: "★ Soğuk İçecekler", urunler: [
+    { id:44, ad:"Su",                fiyat:25  },
+    { id:45, ad:"Sade Soda",         fiyat:60  },
+    { id:46, ad:"Meyveli Soda",      fiyat:60  },
+    { id:47, ad:"Fuse Tea",          fiyat:70  },
+    { id:48, ad:"Kola / Fanta / Zero", fiyat:70 },
+    { id:49, ad:"Churchill",         fiyat:120 },
+    { id:50, ad:"Enerji Içecegi",    fiyat:120 },
+    { id:51, ad:"Limonata",          fiyat:120 },
+    { id:52, ad:"Naneli Limonata",   fiyat:140 },
+    { id:53, ad:"Çilekli Limonata",  fiyat:140 },
+  ]},
+  { kategori: "★ Milkshake", urunler: [
+    { id:54, ad:"Vanilya Milkshake",   boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:55, ad:"Çilek Milkshake",     boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:56, ad:"Çikolata Milkshake",  boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:57, ad:"Karamel Milkshake",   boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:58, ad:"Muzlu Milkshake",     boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+  ]},
+  { kategori: "★ Kokteyller", urunler: [
+    { id:59, ad:"Mojito",          boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:60, ad:"Karadut Yagmuru", boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:61, ad:"Çilekli Mojito",  boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:62, ad:"Cool Lime",       boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:63, ad:"Berry",           boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:64, ad:"Rainbow",         boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:65, ad:"Pink Panther",    boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:66, ad:"Pina Colada",     boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+  ]},
+  { kategori: "★ Frozen & Frappe", urunler: [
+    { id:67, ad:"Çilek Frozen",      boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+    { id:68, ad:"Karadut Frozen",    boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+    { id:69, ad:"Seftali Frozen",    boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+    { id:70, ad:"Nane Limon Frozen", boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+    { id:71, ad:"Elma Frozen",       boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+    { id:72, ad:"Karpuz Frozen",     boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+    { id:73, ad:"Muz Frappe",        boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+    { id:74, ad:"Çilek Frappe",      boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+    { id:75, ad:"Vanilya Frappe",    boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+    { id:76, ad:"Çikolatali Frappe", boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+    { id:77, ad:"Frappuccino",       boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
+  ]},
+  { kategori: "★ Dondurma", urunler: [
+    { id:78, ad:"Dondurma Topu",        fiyat:60  },
+    { id:79, ad:"Dondurma Cup (4 Top)", fiyat:220 },
+  ]},
+];
+
+let sepet = {};
+let masaNo = 1;
+
+function getMasaNo() {
+  const p = new URLSearchParams(window.location.search);
+  const m = parseInt(p.get("masa"));
+  return (m && m >= 1 && m <= 10) ? m : 1;
+}
+
+function findUrun(id) {
+  for (const k of menu) { const u = k.urunler.find(u => u.id === id); if (u) return u; }
+  return null;
+}
+
+function getKey(id, boyut) { return boyut ? `${id}_${boyut}` : `${id}`; }
+
+function updateCartCount() {
+  const total = Object.values(sepet).reduce((a, b) => a + b.adet, 0);
+  document.getElementById("cart-count").textContent = total;
+}
+
+function renderItemControls(urun) {
+  if (urun.boyutlar) {
+    const rows = urun.boyutlar.map(b => {
+      const key = getKey(urun.id, b.ad);
+      const qty = sepet[key] ? sepet[key].adet : 0;
+      return `<div class="size-row">
+        <span class="size-lbl">${b.ad}</span>
+        <span class="size-pr">${b.fiyat} ₺</span>
+        <div class="size-ctrl">
+          ${qty > 0 ? `<button class="qty-btn sm" onclick="window.change(${urun.id},'${b.ad}',-1)">−</button><span class="qty-sm">${qty}</span>` : ''}
+          <button class="qty-btn add sm" onclick="window.change(${urun.id},'${b.ad}',1)">+</button>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="size-group">${rows}</div>`;
+  } else {
+    const key = getKey(urun.id, null);
+    const qty = sepet[key] ? sepet[key].adet : 0;
+    return `<div class="single-ctrl">
+      <span class="menu-item-price">${urun.fiyat} ₺</span>
+      <div class="item-controls">
+        ${qty > 0 ? `<button class="qty-btn" onclick="window.change(${urun.id},null,-1)">−</button><span class="qty-display">${qty}</span>` : ''}
+        <button class="qty-btn add" onclick="window.change(${urun.id},null,1)">+</button>
+      </div>
+    </div>`;
+  }
+}
+
+function updateItem(id) {
+  const el = document.getElementById("item-"+id);
+  if (!el) return;
+  const urun = findUrun(id);
+  if (!urun) return;
+  const hasItems = urun.boyutlar
+    ? urun.boyutlar.some(b => sepet[getKey(urun.id, b.ad)])
+    : sepet[getKey(urun.id, null)];
+  el.className = "menu-item" + (hasItems ? " in-cart" : "");
+  el.innerHTML = `<div class="menu-item-info"><div class="menu-item-name">${urun.ad}</div></div>${renderItemControls(urun)}`;
+}
+
+function renderMenu() {
+  const container = document.getElementById("menu-container");
+  const tabs = document.getElementById("cat-tabs");
+  container.innerHTML = ""; tabs.innerHTML = "";
+  menu.forEach((kat, ki) => {
+    const tab = document.createElement("button");
+    tab.className = "cat-tab" + (ki === 0 ? " active" : "");
+    tab.textContent = kat.kategori;
+    tab.onclick = () => {
+      document.querySelectorAll(".cat-tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("sec-"+ki).scrollIntoView({behavior:"smooth",block:"start"});
+    };
+    tabs.appendChild(tab);
+    const sec = document.createElement("div");
+    sec.className = "menu-section"; sec.id = "sec-"+ki;
+    const title = document.createElement("div");
+    title.className = "menu-section-title"; title.textContent = kat.kategori;
+    sec.appendChild(title);
+    const items = document.createElement("div"); items.className = "menu-items";
+    kat.urunler.forEach(urun => {
+      const el = document.createElement("div");
+      el.className = "menu-item"; el.id = "item-"+urun.id;
+      el.innerHTML = `<div class="menu-item-info"><div class="menu-item-name">${urun.ad}</div></div>${renderItemControls(urun)}`;
+      items.appendChild(el);
+    });
+    sec.appendChild(items); container.appendChild(sec);
+  });
+}
+
+window.change = (id, boyut, delta) => {
+  const key = getKey(id, boyut);
+  const urun = findUrun(id);
+  if (!urun) return;
+  if (!sepet[key] && delta > 0) {
+    const fiyat = boyut ? urun.boyutlar.find(b => b.ad === boyut).fiyat : urun.fiyat;
+    sepet[key] = { ad: boyut ? `${urun.ad} (${boyut})` : urun.ad, fiyat, adet: 0 };
+  }
+  if (sepet[key]) {
+    sepet[key].adet = Math.max(0, sepet[key].adet + delta);
+    if (sepet[key].adet === 0) delete sepet[key];
+  }
+  updateItem(id);
+  updateCartCount();
+};
+
+window.toggleCart = () => {
+  const overlay = document.getElementById("cart-overlay");
+  const drawer = document.getElementById("cart-drawer");
+  const open = drawer.classList.contains("open");
+  if (open) { drawer.classList.remove("open"); overlay.classList.remove("open"); }
+  else { renderCart(); drawer.classList.add("open"); overlay.classList.add("open"); }
+};
+
+function renderCart() {
+  const container = document.getElementById("cart-items");
+  const footer = document.getElementById("cart-footer");
+  const keys = Object.keys(sepet);
+  if (keys.length === 0) {
+    container.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">☕</div>Sepetiniz boş.<br>Menüden ürün ekleyin.</div>`;
+    footer.style.display = "none"; return;
+  }
+  let total = 0; container.innerHTML = "";
+  keys.forEach(key => {
+    const item = sepet[key];
+    const sub = item.fiyat * item.adet; total += sub;
+    const el = document.createElement("div"); el.className = "cart-item";
+    el.innerHTML = `<div style="flex:1"><div class="cart-item-name">${item.ad}</div><div class="cart-item-qty">${item.adet} adet × ${item.fiyat} ₺</div></div><span class="cart-item-price">${sub} ₺</span><button class="cart-item-remove" onclick="window.removeFromCart('${key}')">×</button>`;
+    container.appendChild(el);
+  });
+  document.getElementById("cart-total").textContent = total + " ₺";
+  footer.style.display = "block";
+}
+
+window.removeFromCart = (key) => {
+  const id = parseInt(key.split('_')[0]);
+  delete sepet[key];
+  updateItem(id);
+  updateCartCount();
+  renderCart();
+};
+
+window.siparisGonder = async () => {
+  const keys = Object.keys(sepet); if (keys.length === 0) return;
+  const btn = document.querySelector(".siparis-btn");
+  btn.disabled = true; btn.textContent = "Gönderiliyor...";
+  const not = document.getElementById("order-note").value.trim();
+  let toplam = 0;
+  const urunlerListesi = [];
+  keys.forEach(key => {
+    const item = sepet[key];
+    const sub = item.fiyat * item.adet; toplam += sub;
+    urunlerListesi.push({ ad: item.ad, adet: item.adet, fiyat: item.fiyat });
+  });
+  try {
+    await push(ref(db, FIREBASE_PATH), { masa: masaNo, urunler: urunlerListesi, toplam, not: not||"", durum: "bekliyor", zaman: Date.now() });
+    document.getElementById("cart-drawer").classList.remove("open");
+    document.getElementById("cart-overlay").classList.remove("open");
+    document.getElementById("success-screen").classList.add("show");
+  } catch(e) {
+    alert("Bağlantı hatası, tekrar deneyin.");
+    btn.disabled = false; btn.textContent = "✓ Sipariş Ver";
+  }
+};
+
+window.resetOrder = () => {
+  sepet = {};
+  document.getElementById("order-note").value = "";
+  document.getElementById("success-screen").classList.remove("show");
+  updateCartCount(); renderMenu();
+};
+
+masaNo = getMasaNo();
+document.getElementById("masa-label").textContent = "Masa " + masaNo;
+document.title = KAFE_ADI + " — Masa " + masaNo;
+renderMenu();
+</script>
+</body>
+</html>

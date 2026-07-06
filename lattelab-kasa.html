@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LatteLab — Kasa Paneli</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="kasa-style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <span class="logo">LatteLab</span>
+    <span class="subtitle">Kasa Paneli</span>
+  </div>
+  <div class="header-right">
+    <div class="status-dot" id="status-dot"></div>
+    <span class="status-text" id="status-text">Bağlanıyor...</span>
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-num" id="stat-bekleyen">0</span>
+        <span class="stat-label">Bekleyen</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" id="stat-tamamlanan">0</span>
+        <span class="stat-label">Tamamlanan</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" id="stat-ciro">0 ₺</span>
+        <span class="stat-label">Günlük Ciro</span>
+      </div>
+    </div>
+    <button class="clear-btn" onclick="clearCompleted()">Tamamlananları Temizle</button>
+  </div>
+</header>
+
+<div class="board" id="board">
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">☕</div>
+    <p>Henüz sipariş yok</p>
+    <span>Müşteriler sipariş verdiğinde burada görünecek</span>
+  </div>
+</div>
+
+<!-- SES MOTORU -->
+<audio id="notif-sound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbua5gJi5co+TdwaxgFiVVmd/bv7BmGx9Iltzax7duIB09fMjLvbpyJCE1ZrK3sLB4KiMsUqCnp6p9MSMlPouXnaKCOCQlMHOImZuOQCUkK2F7jZOWjkcmJCdRb4OLkZBUKCQoRWV4hImMXS0kKT1Zcn+EiGgzJCo5T2l4f4d2PiQrNEhhen+Ie0YlKzJBbnZ8hHFNJisxOWRwdoB5VyorMTRZaXF8d2AyKy80TmFsd3hnOystMUZZaXJyZj0tLDFBU2VucGo=" type="audio/wav">
+</audio>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, update, query, orderByChild, equalTo }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// =====================
+// FIREBASE AYARLARI
+// =====================
+const firebaseConfig = {
+  apiKey: "AIzaSyALDEl3MN5frBidfX7AZ4op0qGFGlPRZ88",
+  authDomain: "nula-coffee.firebaseapp.com",
+  databaseURL: "https://nula-coffee-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "nula-coffee",
+  storageBucket: "nula-coffee.firebasestorage.app",
+  messagingSenderId: "601885483227",
+  appId: "1:601885483227:web:dde659834f539be9e02cfe"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// =====================
+// DURUM
+// =====================
+let siparisler = {};
+let ilkYukleme = true;
+
+// Bağlantı durumu
+const connRef = ref(db, ".info/connected");
+onValue(connRef, (snap) => {
+  const connected = snap.val();
+  const dot = document.getElementById("status-dot");
+  const text = document.getElementById("status-text");
+  if (connected) {
+    dot.className = "status-dot online";
+    text.textContent = "Canlı bağlantı aktif";
+  } else {
+    dot.className = "status-dot offline";
+    text.textContent = "Bağlantı kesildi";
+  }
+});
+
+// Siparişleri dinle
+const sipRef = ref(db, "lattelab_siparisler");
+onValue(sipRef, (snap) => {
+  const data = snap.val() || {};
+
+  // Yeni sipariş var mı kontrol et
+  if (!ilkYukleme) {
+    const eskiIds = new Set(Object.keys(siparisler));
+    const yeniIds = Object.keys(data).filter(k => !eskiIds.has(k));
+    if (yeniIds.length > 0) {
+      playSound();
+      showToast(`Masa ${data[yeniIds[0]].masa} yeni sipariş verdi!`);
+    }
+  }
+
+  siparisler = data;
+  ilkYukleme = false;
+  renderBoard();
+  updateStats();
+});
+
+// =====================
+// RENDER
+// =====================
+function renderBoard() {
+  const board = document.getElementById("board");
+  const empty = document.getElementById("empty-state");
+  const ids = Object.keys(siparisler).sort((a, b) => {
+    // Bekleyenler önce, sonra zamana göre yeniden eskiye
+    const sa = siparisler[a];
+    const sb = siparisler[b];
+    if (sa.durum !== sb.durum) return sa.durum === "bekliyor" ? -1 : 1;
+    return sb.zaman - sa.zaman;
+  });
+
+  // Eski kartları kaldır (empty state hariç)
+  board.querySelectorAll(".siparis-kart").forEach(el => el.remove());
+
+  if (ids.length === 0) {
+    empty.style.display = "flex";
+    return;
+  }
+  empty.style.display = "none";
+
+  ids.forEach(id => {
+    const s = siparisler[id];
+    const kart = document.createElement("div");
+    kart.className = "siparis-kart " + (s.durum === "tamamlandi" ? "tamamlandi" : "bekliyor");
+    kart.id = "kart-" + id;
+
+    const zaman = new Date(s.zaman);
+    const zamanStr = zaman.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+    const gecen = Math.floor((Date.now() - s.zaman) / 60000);
+    const gecenStr = gecen < 1 ? "Az önce" : gecen + " dk önce";
+
+    const urunlerHTML = s.urunler.map(u =>
+      `<div class="urun-satir">
+        <span class="urun-adi">${u.ad}</span>
+        <span class="urun-adet">× ${u.adet}</span>
+        <span class="urun-fiyat">${u.fiyat * u.adet} ₺</span>
+      </div>`
+    ).join("");
+
+    kart.innerHTML = `
+      <div class="kart-header">
+        <div class="masa-badge">Masa ${s.masa}</div>
+        ${s.musteriAdi ? `<div class="musteri-adi">👤 ${s.musteriAdi}</div>` : ""}
+        <div class="kart-zaman">
+          <span class="zaman-saat">${zamanStr}</span>
+          <span class="zaman-gecen">${gecenStr}</span>
+        </div>
+        ${s.durum === "tamamlandi" ? '<div class="tamamlandi-badge">✓ Tamamlandı</div>' : ""}
+      </div>
+      <div class="urunler">${urunlerHTML}</div>
+      ${s.not ? `<div class="siparis-not">📝 ${s.not}</div>` : ""}
+      <div class="kart-footer">
+        <span class="toplam">Toplam: <strong>${s.toplam} ₺</strong></span>
+        ${s.durum === "bekliyor"
+          ? `<button class="tamam-btn" onclick="tamamla('${id}')">✓ Tamamlandı</button>`
+          : `<button class="iptal-btn" onclick="geriAl('${id}')">↩ Geri Al</button>`
+        }
+      </div>
+    `;
+    board.appendChild(kart);
+  });
+}
+
+function updateStats() {
+  const ids = Object.keys(siparisler);
+  const bekleyenler = ids.filter(id => siparisler[id].durum === "bekliyor");
+  const tamamlananlar = ids.filter(id => siparisler[id].durum === "tamamlandi");
+  const ciro = tamamlananlar.reduce((t, id) => t + (siparisler[id].toplam || 0), 0);
+
+  document.getElementById("stat-bekleyen").textContent = bekleyenler.length;
+  document.getElementById("stat-tamamlanan").textContent = tamamlananlar.length;
+  document.getElementById("stat-ciro").textContent = ciro + " ₺";
+}
+
+// =====================
+// AKSİYONLAR
+// =====================
+window.tamamla = (id) => {
+  update(ref(db, "siparisler/" + id), { durum: "tamamlandi" });
+};
+
+window.geriAl = (id) => {
+  update(ref(db, "siparisler/" + id), { durum: "bekliyor" });
+};
+
+window.clearCompleted = () => {
+  const ids = Object.keys(siparisler).filter(id => siparisler[id].durum === "tamamlandi");
+  if (ids.length === 0) return;
+  if (!confirm(ids.length + " tamamlanan siparişi silmek istiyor musunuz?")) return;
+  const updates = {};
+  ids.forEach(id => updates["siparisler/" + id] = null);
+  update(ref(db), updates);
+};
+
+// =====================
+// SES & BİLDİRİM
+// =====================
+function playSound() {
+  try {
+    // Basit beep sesi
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 150, 300].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      osc.type = "sine";
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay / 1000);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay / 1000 + 0.2);
+      osc.start(ctx.currentTime + delay / 1000);
+      osc.stop(ctx.currentTime + delay / 1000 + 0.2);
+    });
+  } catch(e) {}
+}
+
+function showToast(msg) {
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add("show"), 10);
+  setTimeout(() => {
+    toast.classList.remove("show");
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+// Zaman güncelleyici (gecen süreyi canlı tut)
+setInterval(renderBoard, 30000);
+</script>
+</body>
+</html>
