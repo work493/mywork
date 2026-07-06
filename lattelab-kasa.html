@@ -5,77 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LatteLab — Kasa Paneli</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --cream: #F5F0F0; --dark: #1A0A0A; --brown: #8B1A1A;
-  --amber: #C0392B; --muted: #7A5A5A; --border: rgba(139,26,26,0.15);
-  --success: #2D6A4F;
-  --serif: 'Playfair Display', Georgia, serif;
-  --sans: 'Inter', system-ui, sans-serif;
-}
-body { font-family: var(--sans); background: var(--cream); color: var(--dark); font-size: 14px; line-height: 1.5; }
-
-/* Header & İstatistikler */
-header { background: var(--dark); color: white; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; flex-wrap: wrap; gap: 1rem; }
-.header-left { display: flex; flex-direction: column; }
-.logo { font-family: var(--serif); font-size: 1.4rem; color: white; letter-spacing: 0.04em; }
-.subtitle { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber); margin-top: 0.1rem; }
-.header-right { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
-.status-container { display: flex; align-items: center; gap: 0.4rem; }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
-.status-dot.online { background: #2ec4b6; box-shadow: 0 0 8px #2ec4b6; }
-.status-dot.offline { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
-.status-text { font-size: 0.75rem; color: #ccc; }
-.stats { display: flex; gap: 1rem; background: rgba(255,255,255,0.05); padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
-.stat-item { display: flex; flex-direction: column; align-items: center; min-width: 70px; }
-.stat-num { font-size: 1.1rem; font-weight: 700; color: white; }
-.stat-label { font-size: 0.65rem; text-transform: uppercase; color: #aaa; letter-spacing: 0.05em; }
-.clear-btn { background: none; border: 1px solid var(--amber); color: white; padding: 0.5rem 0.9rem; border-radius: 3px; font-size: 0.75rem; font-weight: 500; cursor: pointer; font-family: var(--sans); transition: all 0.2s; }
-.clear-btn:hover { background: var(--amber); }
-
-/* Sipariş Panosu (Board) */
-.board { padding: 1.5rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; min-height: calc(100vh - 80px); align-content: start; }
-.empty-state { grid-column: 1 / -1; text-align: center; padding: 5rem 2rem; color: var(--muted); }
-.empty-icon { font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.3; }
-.empty-state p { font-size: 1.2rem; font-family: var(--serif); font-style: italic; margin-bottom: 0.25rem; }
-.empty-state span { font-size: 0.85rem; }
-
-/* Sipariş Kartları */
-.siparis-kart { background: white; border-radius: 6px; border: 1px solid var(--border); display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(26,10,10,0.04); transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
-.siparis-kart.tamamlandi { opacity: 0.7; border-color: rgba(45,106,79,0.2); }
-.siparis-kart.bekliyor { border-top: 4px solid var(--amber); }
-.kart-header { padding: 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #faf8f8; }
-.masa-badge { background: var(--dark); color: white; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 2px; }
-.musteri-adi { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
-.kart-zaman { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; font-size: 0.7rem; }
-.zaman-saat { font-weight: 600; color: var(--dark); }
-.zaman-gecen { color: var(--amber); font-weight: 500; }
-.tamamlandi-badge { background: var(--success); color: white; font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 2px; margin-left: auto; }
-
-.urunler { padding: 1rem; flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-.urun-satir { display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; padding-bottom: 0.4rem; border-bottom: 1px dashed rgba(139,26,26,0.08); }
-.urun-satir:last-child { border-bottom: none; padding-bottom: 0; }
-.urun-adi { font-weight: 500; color: var(--dark); }
-.urun-adet { color: var(--muted); font-size: 0.8rem; margin-left: 0.5rem; }
-.urun-fiyat { font-weight: 600; color: var(--brown); }
-
-.siparis-not { margin: 0 1rem 1rem; padding: 0.6rem; background: #FFF3CD; border-left: 3px solid #FFC107; font-size: 0.8rem; color: #664d03; border-radius: 2px; font-weight: 500; }
-.kart-footer { padding: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #faf8f8; }
-.toplam { font-size: 0.85rem; color: var(--muted); }
-.toplam strong { font-size: 1.1rem; color: var(--brown); font-weight: 700; }
-
-/* Butonlar */
-.tamam-btn, .iptal-btn { font-family: var(--sans); font-size: 0.8rem; font-weight: 600; padding: 0.5rem 1rem; border: none; border-radius: 3px; cursor: pointer; transition: background 0.2s; }
-.tamam-btn { background: var(--success); color: white; }
-.tamam-btn:hover { background: #1b4332; }
-.iptal-btn { background: #6c757d; color: white; }
-.iptal-btn:hover { background: #5a6268; }
-
-/* Toast Bildirim */
-.toast { position: fixed; bottom: 20px; right: 20px; background: var(--dark); color: white; padding: 1rem 1.5rem; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.85rem; font-weight: 500; transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 100; border-left: 4px solid var(--success); }
-.toast.show { transform: translateY(0); opacity: 1; }
-</style>
+<link rel="stylesheet" href="kasa-style.css">
 </head>
 <body>
 
@@ -85,10 +15,8 @@ header { background: var(--dark); color: white; padding: 1rem 1.5rem; display: f
     <span class="subtitle">Kasa Paneli</span>
   </div>
   <div class="header-right">
-    <div class="status-container">
-      <div class="status-dot" id="status-dot"></div>
-      <span class="status-text" id="status-text">Bağlanıyor...</span>
-    </div>
+    <div class="status-dot" id="status-dot"></div>
+    <span class="status-text" id="status-text">Bağlanıyor...</span>
     <div class="stats">
       <div class="stat-item">
         <span class="stat-num" id="stat-bekleyen">0</span>
@@ -115,13 +43,19 @@ header { background: var(--dark); color: white; padding: 1rem 1.5rem; display: f
   </div>
 </div>
 
+<!-- SES MOTORU -->
+<audio id="notif-sound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbua5gJi5co+TdwaxgFiVVmd/bv7BmGx9Iltzax7duIB09fMjLvbpyJCE1ZrK3sLB4KiMsUqCnp6p9MSMlPouXnaKCOCQlMHOImZuOQCUkK2F7jZOWjkcmJCdRb4OLkZBUKCQoRWV4hImMXS0kKT1Zcn+EiGgzJCo5T2l4f4d2PiQrNEhhen+Ie0YlKzJBbnZ8hHFNJisxOWRwdoB5VyorMTRZaXF8d2AyKy80TmFsd3hnOystMUZZaXJyZj0tLDFBU2VucGo=" type="audio/wav">
+</audio>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, onValue, update }
+import { getDatabase, ref, onValue, update, query, orderByChild, equalTo }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-const FIREBASE_PATH = "lattelab_siparisler";
-
+// =====================
+// FIREBASE AYARLARI
+// =====================
 const firebaseConfig = {
   apiKey: "AIzaSyALDEl3MN5frBidfX7AZ4op0qGFGlPRZ88",
   authDomain: "nula-coffee.firebaseapp.com",
@@ -135,10 +69,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// =====================
+// DURUM
+// =====================
 let siparisler = {};
 let ilkYukleme = true;
 
-// Bağlantı durumu dinleyici
+// Bağlantı durumu
 const connRef = ref(db, ".info/connected");
 onValue(connRef, (snap) => {
   const connected = snap.val();
@@ -154,14 +91,15 @@ onValue(connRef, (snap) => {
 });
 
 // Siparişleri dinle
-const sipRef = ref(db, FIREBASE_PATH);
+const sipRef = ref(db, "lattelab_siparisler");
 onValue(sipRef, (snap) => {
   const data = snap.val() || {};
 
+  // Yeni sipariş var mı kontrol et
   if (!ilkYukleme) {
     const eskiIds = new Set(Object.keys(siparisler));
     const yeniIds = Object.keys(data).filter(k => !eskiIds.has(k));
-    if (yeniIds.length > 0 && data[yeniIds[0]].durum === "bekliyor") {
+    if (yeniIds.length > 0) {
       playSound();
       showToast(`Masa ${data[yeniIds[0]].masa} yeni sipariş verdi!`);
     }
@@ -173,16 +111,21 @@ onValue(sipRef, (snap) => {
   updateStats();
 });
 
+// =====================
+// RENDER
+// =====================
 function renderBoard() {
   const board = document.getElementById("board");
   const empty = document.getElementById("empty-state");
   const ids = Object.keys(siparisler).sort((a, b) => {
+    // Bekleyenler önce, sonra zamana göre yeniden eskiye
     const sa = siparisler[a];
     const sb = siparisler[b];
     if (sa.durum !== sb.durum) return sa.durum === "bekliyor" ? -1 : 1;
     return sb.zaman - sa.zaman;
   });
 
+  // Eski kartları kaldır (empty state hariç)
   board.querySelectorAll(".siparis-kart").forEach(el => el.remove());
 
   if (ids.length === 0) {
@@ -204,7 +147,8 @@ function renderBoard() {
 
     const urunlerHTML = s.urunler.map(u =>
       `<div class="urun-satir">
-        <span class="urun-adi">${u.ad} <span class="urun-adet">× ${u.adet}</span></span>
+        <span class="urun-adi">${u.ad}</span>
+        <span class="urun-adet">× ${u.adet}</span>
         <span class="urun-fiyat">${u.fiyat * u.adet} ₺</span>
       </div>`
     ).join("");
@@ -215,17 +159,17 @@ function renderBoard() {
         ${s.musteriAdi ? `<div class="musteri-adi">👤 ${s.musteriAdi}</div>` : ""}
         <div class="kart-zaman">
           <span class="zaman-saat">${zamanStr}</span>
-          <span class="zaman-gecen">${s.durum === "bekliyor" ? gecenStr : ""}</span>
+          <span class="zaman-gecen">${gecenStr}</span>
         </div>
         ${s.durum === "tamamlandi" ? '<div class="tamamlandi-badge">✓ Tamamlandı</div>' : ""}
       </div>
       <div class="urunler">${urunlerHTML}</div>
-      ${s.not ? `<div class="siparis-not">📝 Hızlı Not: ${s.not}</div>` : ""}
+      ${s.not ? `<div class="siparis-not">📝 ${s.not}</div>` : ""}
       <div class="kart-footer">
         <span class="toplam">Toplam: <strong>${s.toplam} ₺</strong></span>
         ${s.durum === "bekliyor"
-          ? `<button class="tamam-btn" onclick="window.tamamla('${id}')">✓ Tamamlandı</button>`
-          : `<button class="iptal-btn" onclick="window.geriAl('${id}')">↩ Geri Al</button>`
+          ? `<button class="tamam-btn" onclick="tamamla('${id}')">✓ Tamamlandı</button>`
+          : `<button class="iptal-btn" onclick="geriAl('${id}')">↩ Geri Al</button>`
         }
       </div>
     `;
@@ -244,25 +188,32 @@ function updateStats() {
   document.getElementById("stat-ciro").textContent = ciro + " ₺";
 }
 
+// =====================
+// AKSİYONLAR
+// =====================
 window.tamamla = (id) => {
-  update(ref(db, `${FIREBASE_PATH}/${id}`), { durum: "tamamlandi" });
+  update(ref(db, "siparisler/" + id), { durum: "tamamlandi" });
 };
 
 window.geriAl = (id) => {
-  update(ref(db, `${FIREBASE_PATH}/${id}`), { durum: "bekliyor" });
+  update(ref(db, "siparisler/" + id), { durum: "bekliyor" });
 };
 
 window.clearCompleted = () => {
   const ids = Object.keys(siparisler).filter(id => siparisler[id].durum === "tamamlandi");
   if (ids.length === 0) return;
-  if (!confirm(ids.length + " tamamlanan siparişi panelden temizlemek istiyor musunuz?")) return;
+  if (!confirm(ids.length + " tamamlanan siparişi silmek istiyor musunuz?")) return;
   const updates = {};
-  ids.forEach(id => updates[`${FIREBASE_PATH}/${id}`] = null);
+  ids.forEach(id => updates["siparisler/" + id] = null);
   update(ref(db), updates);
 };
 
+// =====================
+// SES & BİLDİRİM
+// =====================
 function playSound() {
   try {
+    // Basit beep sesi
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     [0, 150, 300].forEach(delay => {
       const osc = ctx.createOscillator();
@@ -271,7 +222,7 @@ function playSound() {
       gain.connect(ctx.destination);
       osc.frequency.value = 880;
       osc.type = "sine";
-      gain.gain.setValueAtTime(0.2, ctx.currentTime + delay / 1000);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay / 1000);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay / 1000 + 0.2);
       osc.start(ctx.currentTime + delay / 1000);
       osc.stop(ctx.currentTime + delay / 1000 + 0.2);
@@ -291,6 +242,7 @@ function showToast(msg) {
   }, 4000);
 }
 
+// Zaman güncelleyici (gecen süreyi canlı tut)
 setInterval(renderBoard, 30000);
 </script>
 </body>
