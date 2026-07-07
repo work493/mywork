@@ -78,6 +78,36 @@ header { background: var(--dark); color: white; padding: 1.1rem 1.5rem; display:
 .success-title { font-family: var(--serif); font-size: 2rem; color: var(--dark); margin-bottom: 0.75rem; font-style: italic; }
 .success-sub { color: var(--muted); font-size: 0.95rem; max-width: 300px; }
 .success-back { margin-top: 2rem; padding: 0.85rem 2rem; background: var(--brown); color: white; border: none; border-radius: 4px; font-family: var(--sans); font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+
+/* Boyut seçim modalı */
+.size-modal { display: none; position: fixed; inset: 0; z-index: 200; }
+.size-modal.open { display: block; }
+.size-modal-overlay { position: absolute; inset: 0; background: rgba(26,10,10,0.6); }
+.size-modal-sheet {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: white; border-radius: 20px 20px 0 0;
+  padding: 0 0 2rem;
+  animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 1rem auto; }
+.modal-urun-adi { font-family: var(--serif); font-size: 1.3rem; font-weight: 400; font-style: italic; color: var(--dark); padding: 0 1.5rem 1rem; border-bottom: 1px solid var(--border); }
+.modal-size-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); }
+.modal-size-row:last-child { border-bottom: none; }
+.modal-size-info { display: flex; flex-direction: column; }
+.modal-size-name { font-size: 1rem; font-weight: 500; color: var(--dark); }
+.modal-size-price { font-size: 0.9rem; color: var(--brown); font-weight: 600; margin-top: 0.1rem; }
+.modal-size-ctrl { display: flex; align-items: center; gap: 0.5rem; }
+.modal-kapat { display: block; margin: 1rem 1.5rem 0; width: calc(100% - 3rem); padding: 0.9rem; background: var(--cream); border: 1.5px solid var(--border); border-radius: 4px; font-family: var(--sans); font-size: 0.9rem; font-weight: 600; color: var(--muted); cursor: pointer; }
+
+/* Boyutlu ürün menü görünümü */
+.menu-item.sized { cursor: pointer; }
+.menu-item.sized:active { background: #fdf5f5; }
+.sized-right { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.start-pr { font-size: 0.85rem; font-weight: 600; color: var(--brown); white-space: nowrap; }
+.arrow-icon { font-size: 1.2rem; color: var(--muted); }
+.cart-badge { display: inline-block; background: var(--amber); color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 10px; margin-top: 0.25rem; }
+
 </style>
 </head>
 <body>
@@ -98,6 +128,17 @@ header { background: var(--dark); color: white; padding: 1.1rem 1.5rem; display:
 
 <div class="cat-tabs" id="cat-tabs"></div>
 <div id="menu-container"></div>
+
+<!-- BOYUT SEÇİM MODALI -->
+<div class="size-modal" id="size-modal">
+  <div class="size-modal-overlay" onclick="closeSizeModal()"></div>
+  <div class="size-modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-urun-adi" id="modal-urun-adi"></div>
+    <div id="modal-items"></div>
+    <button class="modal-kapat" onclick="closeSizeModal()">Kapat</button>
+  </div>
+</div>
 
 <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
 <div class="cart-drawer" id="cart-drawer">
@@ -267,19 +308,13 @@ function updateCartCount() {
 
 function renderItemControls(urun) {
   if (urun.boyutlar) {
-    const rows = urun.boyutlar.map(b => {
-      const key = getKey(urun.id, b.ad);
-      const qty = sepet[key] ? sepet[key].adet : 0;
-      return `<div class="size-row">
-        <span class="size-lbl">${b.ad}</span>
-        <span class="size-pr">${b.fiyat} ₺</span>
-        <div class="size-ctrl">
-          ${qty > 0 ? `<button class="qty-btn sm" onclick="window.change(${urun.id},'${b.ad}',-1)">−</button><span class="qty-sm">${qty}</span>` : ''}
-          <button class="qty-btn add sm" onclick="window.change(${urun.id},'${b.ad}',1)">+</button>
-        </div>
-      </div>`;
-    }).join('');
-    return `<div class="size-group">${rows}</div>`;
+    const minFiyat = Math.min(...urun.boyutlar.map(b => b.fiyat));
+    const totalQty = urun.boyutlar.reduce((s, b) => s + (sepet[getKey(urun.id, b.ad)] ? sepet[getKey(urun.id, b.ad)].adet : 0), 0);
+    return `<div class="sized-right" onclick="window.openSizeModal(${urun.id})">
+      ${totalQty > 0 ? `<span class="cart-badge">${totalQty} adet</span>` : ''}
+      <span class="start-pr">${minFiyat} ₺'den</span>
+      <span class="arrow-icon">›</span>
+    </div>`;
   } else {
     const key = getKey(urun.id, null);
     const qty = sepet[key] ? sepet[key].adet : 0;
@@ -301,7 +336,7 @@ function updateItem(id) {
   const hasItems = urun.boyutlar
     ? urun.boyutlar.some(b => sepet[getKey(urun.id, b.ad)])
     : sepet[getKey(urun.id, null)];
-  el.className = "menu-item" + (hasItems ? " in-cart" : "");
+  el.className = "menu-item" + (urun.boyutlar ? " sized" : "") + (hasItems ? " in-cart" : "");
   el.innerHTML = `<div class="menu-item-info"><div class="menu-item-name">${urun.ad}</div></div>${renderItemControls(urun)}`;
 }
 
@@ -327,7 +362,8 @@ function renderMenu() {
     const items = document.createElement("div"); items.className = "menu-items";
     kat.urunler.forEach(urun => {
       const el = document.createElement("div");
-      el.className = "menu-item"; el.id = "item-"+urun.id;
+      el.className = "menu-item" + (urun.boyutlar ? " sized" : "");
+      el.id = "item-"+urun.id;
       el.innerHTML = `<div class="menu-item-info"><div class="menu-item-name">${urun.ad}</div></div>${renderItemControls(urun)}`;
       items.appendChild(el);
     });
@@ -385,6 +421,47 @@ window.removeFromCart = (key) => {
   updateItem(id);
   updateCartCount();
   renderCart();
+};
+
+let currentModalId = null;
+
+function renderModalItems(id) {
+  const urun = findUrun(id);
+  if (!urun) return;
+  const itemsEl = document.getElementById("modal-items");
+  itemsEl.innerHTML = urun.boyutlar.map(b => {
+    const key = getKey(id, b.ad);
+    const qty = sepet[key] ? sepet[key].adet : 0;
+    return `<div class="modal-size-row">
+      <div class="modal-size-info">
+        <span class="modal-size-name">${b.ad}</span>
+        <span class="modal-size-price">${b.fiyat} ₺</span>
+      </div>
+      <div class="modal-size-ctrl">
+        ${qty > 0 ? `<button class="qty-btn" onclick="window.modalChange(${id},'${b.ad}',-1)">−</button><span class="qty-display">${qty}</span>` : ''}
+        <button class="qty-btn add" onclick="window.modalChange(${id},'${b.ad}',1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.openSizeModal = (id) => {
+  const urun = findUrun(id);
+  if (!urun || !urun.boyutlar) return;
+  currentModalId = id;
+  document.getElementById("modal-urun-adi").textContent = urun.ad;
+  renderModalItems(id);
+  document.getElementById("size-modal").classList.add("open");
+};
+
+window.closeSizeModal = () => {
+  document.getElementById("size-modal").classList.remove("open");
+  currentModalId = null;
+};
+
+window.modalChange = (id, boyut, delta) => {
+  window.change(id, boyut, delta);
+  renderModalItems(id);
 };
 
 window.siparisGonder = async () => {
