@@ -424,12 +424,26 @@ document.getElementById("masa-label").textContent = "Masa " + masaNo;
 document.title = KAFE_ADI + " — Masa " + masaNo;
 renderMenu();
 
-// Kategori sekmeleri header yüksekliğine göre otomatik ayarla
+// Header ve sekme yüksekliğini ayarla
 const header = document.querySelector("header");
 const tabs = document.getElementById("cat-tabs");
 if (header && tabs) {
   tabs.style.top = header.offsetHeight + "px";
 }
+
+// Scroll spy — hangi bölümdeyse o sekmeyi aktif yap
+window.addEventListener("scroll", () => {
+  const sections = document.querySelectorAll(".menu-section");
+  const tabBtns = document.querySelectorAll(".cat-tab");
+  const offset = (header ? header.offsetHeight : 68) + (tabs ? tabs.offsetHeight : 44) + 10;
+  let aktif = 0;
+  sections.forEach((sec, i) => {
+    if (sec.getBoundingClientRect().top <= offset) aktif = i;
+  });
+  tabBtns.forEach((btn, i) => {
+    btn.classList.toggle("active", i === aktif);
+  });
+}, { passive: true });
 </script>
 </body>
 </html>
