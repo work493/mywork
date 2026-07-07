@@ -192,11 +192,11 @@ function updateStats() {
 // AKSİYONLAR
 // =====================
 window.tamamla = (id) => {
-  update(ref(db, "siparisler/" + id), { durum: "tamamlandi" });
+  update(ref(db, "lattelab_siparisler/" + id), { durum: "tamamlandi" });
 };
 
 window.geriAl = (id) => {
-  update(ref(db, "siparisler/" + id), { durum: "bekliyor" });
+  update(ref(db, "lattelab_siparisler/" + id), { durum: "bekliyor" });
 };
 
 window.clearCompleted = () => {
@@ -204,7 +204,7 @@ window.clearCompleted = () => {
   if (ids.length === 0) return;
   if (!confirm(ids.length + " tamamlanan siparişi silmek istiyor musunuz?")) return;
   const updates = {};
-  ids.forEach(id => updates["siparisler/" + id] = null);
+  ids.forEach(id => updates["lattelab_siparisler/" + id] = null);
   update(ref(db), updates);
 };
 
