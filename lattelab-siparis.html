@@ -15,15 +15,15 @@
   --sans: 'Inter', system-ui, sans-serif;
 }
 html, body { height: 100%; }
-body { font-family: var(--sans); background: var(--cream); color: var(--dark); font-size: 15px; line-height: 1.6; padding-bottom: 120px; }
-header { background: var(--dark); color: white; padding: 1.1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+body { font-family: var(--sans); background: var(--cream); color: var(--dark); font-size: 15px; line-height: 1.6; padding-bottom: 120px; padding-top: 112px; }
+header { background: var(--dark); color: white; padding: 1.1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; z-index: 50; }
 .header-left { display: flex; flex-direction: column; }
 .header-logo { font-family: var(--serif); font-size: 1.3rem; color: white; font-weight: 400; letter-spacing: 0.04em; }
 .header-masa { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber); margin-top: 0.1rem; }
 .cart-btn { background: var(--amber); border: none; border-radius: 2px; padding: 0.6rem 1.1rem; color: white; font-size: 0.8rem; font-weight: 600; font-family: var(--sans); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s; }
 .cart-btn:hover { background: #a93226; }
 .cart-count { background: white; color: var(--amber); border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-.cat-tabs { display: flex; overflow-x: auto; background: white; border-bottom: 1px solid var(--border); padding: 0 0.5rem; scrollbar-width: none; position: sticky; top: 68px; z-index: 40; }
+.cat-tabs { display: flex; overflow-x: auto; background: white; border-bottom: 1px solid var(--border); padding: 0 0.5rem; scrollbar-width: none; position: fixed; top: 68px; left: 0; right: 0; z-index: 40; }
 .cat-tabs::-webkit-scrollbar { display: none; }
 .cat-tab { flex-shrink: 0; padding: 0.9rem 1.1rem; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: none; background: none; font-family: var(--sans); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; white-space: nowrap; }
 .cat-tab.active { color: var(--brown); border-bottom-color: var(--amber); }
