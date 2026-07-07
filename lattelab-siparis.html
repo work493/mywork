@@ -414,6 +414,8 @@ window.resetOrder = () => {
   sepet = {};
   document.getElementById("order-note").value = "";
   document.getElementById("success-screen").classList.remove("show");
+  const btn = document.querySelector(".siparis-btn");
+  if (btn) { btn.disabled = false; btn.textContent = "✓ Sipariş Ver"; }
   updateCartCount(); renderMenu();
 };
 
