@@ -136,7 +136,7 @@ header { background: var(--dark); color: white; padding: 1.1rem 1.5rem; display:
     <div class="modal-handle"></div>
     <div class="modal-urun-adi" id="modal-urun-adi"></div>
     <div id="modal-items"></div>
-    <button class="modal-kapat" onclick="closeSizeModal()">Sepete Ekle ✓</button>
+    <button class="modal-kapat" onclick="sepetiOnayla()">Sepete Ekle ✓</button>
   </div>
 </div>
 
@@ -227,7 +227,7 @@ const menu = [
     { id:34, ad:"Damla Sakizli Türk Kahvesi", fiyat:120 },
   ]},
   { kategori: "★ Çay & Sıcak", urunler: [
-    { id:35, ad:"Fincan Çay",      fiyat:60  },
+    { id:35, ad:"Fincan Çay",      fiyat:50  },
     { id:36, ad:"Sicak Çikolata",  fiyat:130 },
     { id:37, ad:"Salep",           fiyat:130 },
     { id:38, ad:"Chai Tea Latte",  fiyat:120 },
@@ -239,10 +239,10 @@ const menu = [
   ]},
   { kategori: "★ Soğuk İçecekler", urunler: [
     { id:44, ad:"Su",                fiyat:25  },
-    { id:45, ad:"Sade Soda",         fiyat:60  },
-    { id:46, ad:"Meyveli Soda",      fiyat:60  },
+    { id:45, ad:"Sade Soda",         fiyat:85  },
+    { id:46, ad:"Meyveli Soda",      fiyat:85  },
     { id:47, ad:"Fuse Tea",          fiyat:70  },
-    { id:48, ad:"Kola / Fanta / Zero", fiyat:70 },
+    { id:48, ad:"Kola / Fanta / Zero", fiyat:85 },
     { id:49, ad:"Churchill",         fiyat:120 },
     { id:50, ad:"Enerji Içecegi",    fiyat:120 },
     { id:51, ad:"Limonata",          fiyat:120 },
@@ -265,6 +265,8 @@ const menu = [
     { id:64, ad:"Rainbow",         boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
     { id:65, ad:"Pink Panther",    boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
     { id:66, ad:"Pina Colada",     boyutlar:[{ad:"Büyük",fiyat:190},{ad:"Küçük",fiyat:180}] },
+    { id:80, ad:"Ananas",          fiyat:200 },
+    { id:81, ad:"Cherry Boost",    fiyat:250 },
   ]},
   { kategori: "★ Frozen & Frappe", urunler: [
     { id:67, ad:"Çilek Frozen",      boyutlar:[{ad:"Büyük",fiyat:200},{ad:"Küçük",fiyat:180}] },
@@ -424,6 +426,7 @@ window.removeFromCart = (key) => {
 };
 
 let currentModalId = null;
+let tempSepet = {}; // Modal için geçici sepet
 
 function renderModalItems(id) {
   const urun = findUrun(id);
@@ -431,7 +434,7 @@ function renderModalItems(id) {
   const itemsEl = document.getElementById("modal-items");
   itemsEl.innerHTML = urun.boyutlar.map(b => {
     const key = getKey(id, b.ad);
-    const qty = sepet[key] ? sepet[key].adet : 0;
+    const qty = tempSepet[key] ? tempSepet[key].adet : 0;
     return `<div class="modal-size-row">
       <div class="modal-size-info">
         <span class="modal-size-name">${b.ad}</span>
@@ -449,18 +452,63 @@ window.openSizeModal = (id) => {
   const urun = findUrun(id);
   if (!urun || !urun.boyutlar) return;
   currentModalId = id;
+
+  // Mevcut sepet durumunu geçici kopyaya al
+  tempSepet = {};
+  urun.boyutlar.forEach(b => {
+    const key = getKey(id, b.ad);
+    if (sepet[key]) tempSepet[key] = { ...sepet[key] };
+  });
+
   document.getElementById("modal-urun-adi").textContent = urun.ad;
   renderModalItems(id);
   document.getElementById("size-modal").classList.add("open");
 };
 
 window.closeSizeModal = () => {
+  // Değişiklikleri iptal et
   document.getElementById("size-modal").classList.remove("open");
   currentModalId = null;
+  tempSepet = {};
+};
+
+window.sepetiOnayla = () => {
+  if (!currentModalId) return;
+  const urun = findUrun(currentModalId);
+  if (!urun) return;
+
+  // tempSepet'i gerçek sepete uygula
+  urun.boyutlar.forEach(b => {
+    const key = getKey(currentModalId, b.ad);
+    if (tempSepet[key] && tempSepet[key].adet > 0) {
+      sepet[key] = { ...tempSepet[key] };
+    } else {
+      delete sepet[key];
+    }
+  });
+
+  updateItem(currentModalId);
+  updateCartCount();
+  document.getElementById("size-modal").classList.remove("open");
+  currentModalId = null;
+  tempSepet = {};
 };
 
 window.modalChange = (id, boyut, delta) => {
-  window.change(id, boyut, delta);
+  const key = getKey(id, boyut);
+  const urun = findUrun(id);
+  if (!urun) return;
+
+  if (!tempSepet[key] && delta > 0) {
+    const fiyat = urun.boyutlar.find(b => b.ad === boyut).fiyat;
+    tempSepet[key] = { ad: `${urun.ad} (${boyut})`, fiyat, adet: 0 };
+  }
+
+  if (tempSepet[key]) {
+    tempSepet[key].adet = Math.max(0, tempSepet[key].adet + delta);
+    if (tempSepet[key].adet === 0) delete tempSepet[key];
+  }
+
   renderModalItems(id);
 };
 
