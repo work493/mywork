@@ -566,7 +566,15 @@ window.addEventListener("scroll", () => {
     if (sec.getBoundingClientRect().top <= offset) aktif = i;
   });
   tabBtns.forEach((btn, i) => {
-    btn.classList.toggle("active", i === aktif);
+    const isActive = i === aktif;
+    btn.classList.toggle("active", isActive);
+    if (isActive && tabs) {
+      // Aktif sekmeyi tab çubuğunda ortala
+      const tabLeft = btn.offsetLeft;
+      const tabWidth = btn.offsetWidth;
+      const tabsWidth = tabs.offsetWidth;
+      tabs.scrollTo({ left: tabLeft - (tabsWidth / 2) + (tabWidth / 2), behavior: 'smooth' });
+    }
   });
 }, { passive: true });
 </script>
