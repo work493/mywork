@@ -107,6 +107,7 @@ header { background: var(--dark); color: white; padding: 1.1rem 1.5rem; display:
 .start-pr { font-size: 0.85rem; font-weight: 600; color: var(--brown); white-space: nowrap; }
 .arrow-icon { font-size: 1.2rem; color: var(--muted); }
 .cart-badge { display: inline-block; background: var(--amber); color: white; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 10px; margin-top: 0.25rem; }
+.item-img { width: 72px; height: 72px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
 
 </style>
 </head>
@@ -285,6 +286,19 @@ const menu = [
     { id:78, ad:"Dondurma Topu",        fiyat:60  },
     { id:79, ad:"Dondurma Cup (4 Top)", fiyat:220 },
   ]},
+  { kategori: "🍰 Pastalar & Tatlılar", urunler: [
+    { id:82, ad:"Belçika Çikolatalı Fransız Pastası", fiyat:290, img:"images/belcika-cikolatali.jpg" },
+    { id:83, ad:"Oreolu Fransız Pastası",             fiyat:290, img:"images/oreolu-pasta.jpg" },
+    { id:84, ad:"Karaorman Meyveli Fransız Pasta",    fiyat:300, img:"images/karaorman-pasta.jpg" },
+    { id:85, ad:"Cream Puff",                         fiyat:300, img:"images/cream-puf.jpg" },
+    { id:86, ad:"Mereng",                             fiyat:280, img:"images/mereng.jpg" },
+    { id:87, ad:"Fix Menü",                           fiyat:600, img:"images/fix-menu.jpg" },
+    { id:88, ad:"San Sebastian",                      fiyat:300, img:"images/san-sebastian.jpg" },
+    { id:89, ad:"Mini Kruvasan",                      fiyat:300, img:"images/mini-kuruvasan.jpg" },
+    { id:90, ad:"Cocostar",                           fiyat:180, img:"images/cocostar.jpg" },
+    { id:91, ad:"Fıstıkzade",                         fiyat:300, img:"images/fistikzade.jpg" },
+    { id:92, ad:"Kowa Waffle",                        fiyat:250, img:"images/kowa-waffle.jpg" },
+  ]},
 ];
 
 let sepet = {};
@@ -339,7 +353,8 @@ function updateItem(id) {
     ? urun.boyutlar.some(b => sepet[getKey(urun.id, b.ad)])
     : sepet[getKey(urun.id, null)];
   el.className = "menu-item" + (urun.boyutlar ? " sized" : "") + (hasItems ? " in-cart" : "");
-  el.innerHTML = `<div class="menu-item-info"><div class="menu-item-name">${urun.ad}</div></div>${renderItemControls(urun)}`;
+  const imgHtml = urun.img ? `<img class="item-img" src="${urun.img}" alt="${urun.ad}" loading="lazy">` : '';
+  el.innerHTML = `${imgHtml}<div class="menu-item-info"><div class="menu-item-name">${urun.ad}</div></div>${renderItemControls(urun)}`;
 }
 
 function renderMenu() {
@@ -366,7 +381,8 @@ function renderMenu() {
       const el = document.createElement("div");
       el.className = "menu-item" + (urun.boyutlar ? " sized" : "");
       el.id = "item-"+urun.id;
-      el.innerHTML = `<div class="menu-item-info"><div class="menu-item-name">${urun.ad}</div></div>${renderItemControls(urun)}`;
+      const imgHtml = urun.img ? `<img class="item-img" src="${urun.img}" alt="${urun.ad}" loading="lazy">` : '';
+      el.innerHTML = `${imgHtml}<div class="menu-item-info"><div class="menu-item-name">${urun.ad}</div></div>${renderItemControls(urun)}`;
       items.appendChild(el);
     });
     sec.appendChild(items); container.appendChild(sec);
