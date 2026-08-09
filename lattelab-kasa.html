@@ -31,9 +31,14 @@
         <span class="stat-label">Günlük Ciro</span>
       </div>
     </div>
+    <button class="ses-btn" id="ses-btn" onclick="sesiEtkinlestir()">🔕 Sesi aç</button>
     <button class="clear-btn" onclick="clearCompleted()">Tamamlananları Temizle</button>
   </div>
 </header>
+
+<div class="ses-uyari" id="ses-uyari" onclick="sesiEtkinlestir()">
+  🔇 Bildirim sesi kapalı — etkinleştirmek için buraya bir kez tıklayın
+</div>
 
 <div class="board" id="board">
   <div class="empty-state" id="empty-state">
@@ -42,11 +47,6 @@
     <span>Müşteriler sipariş verdiğinde burada görünecek</span>
   </div>
 </div>
-
-<!-- SES MOTORU -->
-<audio id="notif-sound" preload="auto">
-  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbua5gJi5co+TdwaxgFiVVmd/bv7BmGx9Iltzax7duIB09fMjLvbpyJCE1ZrK3sLB4KiMsUqCnp6p9MSMlPouXnaKCOCQlMHOImZuOQCUkK2F7jZOWjkcmJCdRb4OLkZBUKCQoRWV4hImMXS0kKT1Zcn+EiGgzJCo5T2l4f4d2PiQrNEhhen+Ie0YlKzJBbnZ8hHFNJisxOWRwdoB5VyorMTRZaXF8d2AyKy80TmFsd3hnOystMUZZaXJyZj0tLDFBU2VucGo=" type="audio/wav">
-</audio>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -101,7 +101,11 @@ onValue(sipRef, (snap) => {
     const yeniIds = Object.keys(data).filter(k => !eskiIds.has(k));
     if (yeniIds.length > 0) {
       playSound();
-      showToast(`Masa ${data[yeniIds[0]].masa} yeni sipariş verdi!`);
+      yeniIds.forEach(k => bildirimGoster(k, data[k]));
+      if (document.hidden) { okunmamis += yeniIds.length; baslikGuncelle(); }
+      showToast(yeniIds.length === 1
+        ? `Masa ${data[yeniIds[0]].masa} yeni sipariş verdi!`
+        : `${yeniIds.length} yeni sipariş geldi!`);
     }
   }
 
@@ -209,26 +213,126 @@ window.clearCompleted = () => {
 };
 
 // =====================
-// SES & BİLDİRİM
+// SES MOTORU
 // =====================
+// ÖNEMLİ: AudioContext SADECE BİR KEZ yaratılır. Her seferinde yenisini
+// yaratmak tarayıcı limitine (Chrome'da sekme başına ~6) takılıp sesi
+// tamamen kesiyordu.
+let audioCtx = null;
+let sesHazir = false;
+
+function ensureAudio() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try { audioCtx = new AC(); } catch(e) { return null; }
+  }
+  return audioCtx;
+}
+
+// Tek bir "çan" vuruşu
+function beep(freq, gecikme, sure, ses) {
+  const ctx = audioCtx;
+  if (!ctx || ctx.state !== "running") return;
+  const t0 = ctx.currentTime + gecikme;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, t0);
+  gain.gain.setValueAtTime(0.0001, t0);
+  gain.gain.exponentialRampToValueAtTime(ses, t0 + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t0 + sure);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + sure + 0.05);
+}
+
 function playSound() {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const cal = () => {
+    // ding-dong × 2
+    [[880, 0.00], [1175, 0.20], [880, 0.45], [1175, 0.65]]
+      .forEach(([f, g]) => beep(f, g, 0.35, 0.35));
+    sesDurumGuncelle();
+  };
+  // Tarayıcı arka planda context'i askıya almış olabilir → önce uyandır
+  if (ctx.state === "running") cal();
+  else ctx.resume().then(cal).catch(() => sesDurumGuncelle());
+}
+
+// Sesi ve bildirimleri etkinleştir (kullanıcı hareketi gerektirir)
+window.sesiEtkinlestir = async () => {
+  const ctx = ensureAudio();
+  if (ctx) {
+    try { await ctx.resume(); } catch(e) {}
+    // Sessiz buffer ile otomatik-oynatma kilidini kır
+    try {
+      const src = ctx.createBufferSource();
+      src.buffer = ctx.createBuffer(1, 1, 22050);
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch(e) {}
+    if (ctx.state === "running" && !sesHazir) {
+      sesHazir = true;
+      beep(1175, 0, 0.15, 0.25); // "açıldı" tonu
+    }
+  }
+  // Masaüstü bildirimi izni
+  if ("Notification" in window && Notification.permission === "default") {
+    try { await Notification.requestPermission(); } catch(e) {}
+  }
+  sesDurumGuncelle();
+};
+
+// Sayfada herhangi bir yere ilk dokunuş da sesi açsın
+["pointerdown", "keydown"].forEach(ev =>
+  document.addEventListener(ev, () => {
+    if (!sesHazir || (audioCtx && audioCtx.state !== "running")) window.sesiEtkinlestir();
+  }, { passive: true })
+);
+
+function sesDurumGuncelle() {
+  const acik = !!audioCtx && audioCtx.state === "running";
+  const btn = document.getElementById("ses-btn");
+  const uyari = document.getElementById("ses-uyari");
+  const bildirimVar = ("Notification" in window) && Notification.permission === "granted";
+  btn.textContent = acik ? (bildirimVar ? "🔔 Ses + bildirim açık" : "🔔 Ses açık") : "🔕 Sesi aç";
+  btn.classList.toggle("aktif", acik);
+  uyari.classList.toggle("goster", !acik);
+}
+
+// =====================
+// MASAÜSTÜ BİLDİRİMİ
+// =====================
+function bildirimGoster(id, s) {
+  if (!("Notification" in window) || Notification.permission !== "granted") return;
   try {
-    // Basit beep sesi
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 150, 300].forEach(delay => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 880;
-      osc.type = "sine";
-      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay / 1000);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay / 1000 + 0.2);
-      osc.start(ctx.currentTime + delay / 1000);
-      osc.stop(ctx.currentTime + delay / 1000 + 0.2);
+    const govde = (s.urunler || []).map(u => `${u.adet}× ${u.ad}`).join(", ");
+    const n = new Notification(`🔔 Masa ${s.masa} — yeni sipariş`, {
+      body: `${govde}\nToplam: ${s.toplam} ₺` + (s.not ? `\n📝 ${s.not}` : ""),
+      tag: "lattelab-" + id,       // her sipariş ayrı bildirim
+      requireInteraction: true,     // kapatılana kadar ekranda kalsın
+      renotify: false
     });
+    n.onclick = () => { window.focus(); n.close(); };
   } catch(e) {}
 }
+
+// =====================
+// SEKME BAŞLIĞI SAYACI
+// =====================
+let okunmamis = 0;
+const baslikOrj = "LatteLab — Kasa Paneli";
+function baslikGuncelle() {
+  document.title = okunmamis > 0 ? `(${okunmamis}) 🔔 Yeni sipariş!` : baslikOrj;
+}
+function okunduIsaretle() {
+  if (okunmamis > 0) { okunmamis = 0; baslikGuncelle(); }
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) okunduIsaretle(); });
+window.addEventListener("focus", okunduIsaretle);
 
 function showToast(msg) {
   const toast = document.createElement("div");
@@ -242,8 +346,12 @@ function showToast(msg) {
   }, 4000);
 }
 
-// Zaman güncelleyici (gecen süreyi canlı tut)
-setInterval(renderBoard, 30000);
+// Açılışta ses durumunu kontrol et (bazı tarayıcılar izin verir, çoğu tıklama ister)
+ensureAudio();
+sesDurumGuncelle();
+
+// Zaman güncelleyici (gecen süreyi canlı tut) + ses durumu denetimi
+setInterval(() => { renderBoard(); sesDurumGuncelle(); }, 30000);
 </script>
 </body>
 </html>

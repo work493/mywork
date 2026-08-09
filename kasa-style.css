@@ -107,6 +107,40 @@ header {
   color: #f87171;
 }
 
+/* SES / BİLDİRİM KONTROLÜ */
+.ses-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid rgba(247,243,236,0.2);
+  border-radius: 3px;
+  color: rgba(247,243,236,0.5);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.ses-btn:hover { border-color: var(--amber); color: var(--amber); }
+.ses-btn.aktif {
+  border-color: rgba(74,222,128,0.4);
+  background: rgba(45,106,79,0.2);
+  color: #4ade80;
+}
+
+.ses-uyari {
+  display: none;
+  padding: 0.9rem 1.5rem;
+  background: var(--amber);
+  color: var(--dark);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+.ses-uyari.goster { display: block; animation: uyariYanip 2s ease-in-out infinite; }
+@keyframes uyariYanip { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
 /* BOARD */
 .board {
   padding: 1.5rem;
